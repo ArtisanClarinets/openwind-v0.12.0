@@ -1,0 +1,52 @@
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openwind"
+version = "0.12.1"
+description = "Open source library to design wind instruments"
+readme = "README.md"
+license = { text = "GPL-3.0-only" }
+maintainers = [
+  { name = "Inria", email = "openwind-contact@inria.fr" },
+]
+authors = [
+  { name = "Juliette Chabassier"},
+  { name = "Augustin Ernoult"},
+  { name = "Olivier Geber" },
+  { name = "Alexis Thibault" },
+  { name = "Tobias Van Baarsel" },
+  { name = "Robin Tournemenne" },
+  { name = "Guillaume Castera" },
+]
+
+keywords = ["Musical Acoustics", "Wind instruments", "Design", "Simulation", "FEM"]
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering",
+]
+
+dependencies = [
+  "numpy",
+  "scipy",
+  "matplotlib",
+  "h5py",
+]
+
+[project.urls]
+Homepage = "https://openwind.inria.fr"
+Documentation = "https://files.inria.fr/openwind/docs/"
+Repository = "https://gitlab.inria.fr/openwind/openwind"
+Issues = "https://gitlab.inria.fr/openwind/openwind/-/issues"
+Changelog = "https://gitlab.inria.fr/openwind/openwind/-/blob/master/CHANGELOG.md"
+Download = "https://gitlab.inria.fr/openwind/openwind/-/archive/v0.12.1/openwind-v0.12.1.zip"
+Demo = "https://demo-openwind.inria.fr/"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["openwind*"]

@@ -1,0 +1,5 @@
+! unit = m
+! diameter = False
+        label      variety     position       length       radius reconnection
+       	   p1        valve      0.01500      0.05500      0.00250      0.01600
+           h1	      hole      0.02200      0.00300      0.00250            /

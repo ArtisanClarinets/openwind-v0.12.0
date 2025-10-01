@@ -1,0 +1,17 @@
+# x_1	x_2	r_1	r_2	typ	param
+# A simple cone (no parameter needed)
+  0	2	1	3	linear	
+
+# x_1	x_2	r_1	r_2	circle	radius (with minus sign if downwards)
+  2	2.7	3	2	circle	-1.2
+
+# An exponential curve (no parameter needed)
+  2.7	5	2	0.3	exponential
+
+# A bessel horn function
+  5	6	0.3	2	bessel 2.4
+
+# A spline with two control points
+# x_1	x_n	r_1	r_n	spline	x_2	x_3	...
+  6	12	2	5	spline	8	6
+

@@ -1,0 +1,5 @@
+label	variety	x	type	r	l	reconnection
+#-------------------------------------------------------------
+piston1 valve	.1	linear	2e-3	0.11	0.11
+valve2 	valve	.23	linear	8e-3	13e-3	0.3
+

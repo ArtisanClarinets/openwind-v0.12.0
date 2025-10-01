@@ -1,0 +1,5 @@
+label        C1    do    re    fa	open	closed	fork
+#----------  ----  ----  ----  ---- ------------------------
+g_hole       x     x     x     x	o	x	o
+b_flat_hole  o     o     o     o	o	x	x
+

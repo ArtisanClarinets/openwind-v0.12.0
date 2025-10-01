@@ -1,0 +1,21 @@
+! version = 0.12.0
+! unit = mm
+! diameter = False
+
+
+**********Main Bore**********
+#    x0	     x1	     r0	     r1	       type	  param
+   0	 100	  20	  30	       Cone
+ 100	1200	  30	  15	     Circle	-10000
+1200	2600	  15	 200	Exponential
+2600	2700	 200	   5	       Cone
+ 
+**********Side Components**********
+       label    position      length      radius
+      g_hole         100          21           2
+ b_flat_hole         230           5           8 
+
+**********Fingering Chart**********
+       label          C1          do          re          fa        open      closed        fork
+      g_hole           x           x           x           x           o           x           o
+ b_flat_hole           o           o           o           o           o           x           x

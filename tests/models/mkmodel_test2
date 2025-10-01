@@ -1,0 +1,8 @@
+# This is a comment
+# x1	x2	r1	r2	type	     param
+  0	0.1	0.02	0.03	linear
+  0.1	1.2	0.03	0.015	circle	     -10
+  1.2	2.6	0.015	0.2	exponential
+# x	r
+  2.7   5e-3
+

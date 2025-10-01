@@ -1,0 +1,6 @@
+sphinx>=7.3.0
+docutils>=0.20.1
+recommonmark
+sphinx-rtd-theme>=2.0.0
+tbump
+pypandoc

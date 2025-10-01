@@ -1,0 +1,5 @@
+label       x       type    r       l
+#----------------------------------------
+g_hole      0.1     linear  2e-3    0.021
+b_flat_hole 0.23    linear  8e-3  5e-3
+

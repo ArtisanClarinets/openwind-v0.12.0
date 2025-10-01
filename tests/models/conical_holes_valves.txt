@@ -1,0 +1,8 @@
+label		variety	position	reconnection	length	radius	radius_out
+#---------------------------------------------------------------------------------
+hole_cyl	hole	0.1		/     		5e-3	2e-3	2e-3
+hole_cone	hole	0.12    	/		8e-3  	4e-3	2e-3
+valve_cone	valve	0.15    	0.16		5e-2  	5e-3	7e-3
+valve_cyl	valve	0.18    	0.185		5e-2  	5e-3	5e-3
+
+

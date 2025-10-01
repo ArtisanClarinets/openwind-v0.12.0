@@ -1,0 +1,75 @@
+{
+    "@context": "ttps://w3id.org/codemeta/3.0",
+    "@type": "SoftwareSourceCode",
+    "applicationCategory": "SoftwareSourceCode",
+    "author": [
+        {
+            "type": "Person",
+            "email": "juliette.chabassier@inria.fr",
+            "familyName": "Chabassier",
+            "givenName": "Juliette"
+        },
+        {
+            "id": "https://orcid.org/0000-0003-1472-1303",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Inria, Paris, France"
+            },
+            "email": "augustin.ernoult@inria.fr",
+            "familyName": "Ernoult",
+            "givenName": "Augustin"
+        },
+        {
+            "type": "Person",
+            "familyName": "Geber",
+            "givenName": "Olivier"
+        },
+        {
+            "type": "Person",
+            "familyName": "Thibault",
+            "givenName": "Alexis"
+        },
+        {
+            "type": "Person",
+            "familyName": "Van Baarsel",
+            "givenName": "Tobias"
+        },
+        {
+            "type": "Person",
+            "familyName": "Tournemenne",
+            "givenName": "Robin"
+        },
+        {
+            "type": "Person",
+            "familyName": "Castera",
+            "givenName": "Guillaume"
+        }
+    ],
+    "codeRepository": "https://gitlab.inria.fr/openwind/openwind",
+    "dateCreated": "2019-02-01",
+    "dateModified": "2025-09-26",
+    "datePublished": "2019-02-07",
+    "description": "The openwind toolbox (for Open Wind Instrument Design) is a tool for modelling wind musical instruments, using one-dimensional Finite Elements Methods",
+    "downloadUrl": "https://gitlab.inria.fr/openwind/openwind/-/archive/v0.12.1/openwind-v0.12.1.zip",
+    "keywords": [
+        "Musical Acoustics",
+        "Wind instruments",
+        "Design",
+        "Simulation",
+        "FEM"
+    ],
+    "license": "https://spdx.org/licenses/GPL-3.0-only",
+    "name": "openwind",
+    "programmingLanguage": "Python 3",
+    "relatedLink": [
+        "https://openwind.inria.fr",
+        "https://files.inria.fr/openwind/docs/",
+        "https://demo-openwind.inria.fr/"
+    ],
+    "releaseNotes": "### Changed\n- remove CadQuery requirements in order to solve the generation of the conda package\n- accelerate tests",
+    "softwareRequirements": "https://gitlab.inria.fr/openwind/openwind/-/blob/master/requirements.txt",
+    "version": "0.12.1",
+    "developmentStatus": "active",
+    "issueTracker": "https://gitlab.inria.fr/openwind/openwind/-/issues"
+}
