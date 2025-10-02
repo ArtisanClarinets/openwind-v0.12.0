@@ -1,0 +1,15 @@
+{
+  "name": "openwind-clarinet-suite",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "ui"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w ui",
+    "build": "npm run build -w ui",
+    "preview": "npm run preview -w ui",
+    "check": "npm run build -w ui && npm run preview -w ui -- --help"
+  }
+}

@@ -1,5 +1,3 @@
-numpy>=2.2
-scipy>=1.15
-matplotlib>=3.10
-packaging>=25.
-h5py>=3.14
+# Aggregate requirements for the OpenWInD clarinet suite
+-r server/requirements.txt
+-e .
