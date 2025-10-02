@@ -131,6 +131,12 @@ main {
   padding: 0 18px;
 }
 
+.ow-button-sm {
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 0.875rem;
+}
+
 .ow-button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -464,11 +470,211 @@ main {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.card-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
 .validation-block {
   background: rgba(248, 113, 113, 0.1);
   border-radius: 12px;
   padding: 12px 16px;
   border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.tone-hole-input {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tone-hole-input input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.75);
+  color: var(--fg);
+}
+
+.tone-hole-input input[aria-invalid='true'] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.3);
+}
+
+.input-warning {
+  font-size: 0.75rem;
+  color: var(--danger);
+}
+
+.hole-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.chip {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(148, 163, 184, 0.14);
+  color: var(--fg);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.chip-open {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.chip-closed {
+  background: rgba(148, 163, 184, 0.25);
+}
+
+.chip-active {
+  background: rgba(250, 204, 21, 0.2);
+  border-color: rgba(250, 204, 21, 0.5);
+}
+
+.quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.workspace-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.workspace-summary div {
+  background: rgba(148, 163, 184, 0.12);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.workspace-summary dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.workspace-summary dd {
+  margin: 4px 0 0;
+  font-size: 1.05rem;
+}
+
+.workspace-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.workspace-status-grid section {
+  background: rgba(15, 23, 42, 0.6);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.geometry-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.geometry-summary div {
+  background: rgba(148, 163, 184, 0.12);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.geometry-grid,
+.simulation-grid,
+.optimization-grid,
+.results-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 1024px) {
+  .geometry-grid,
+  .simulation-grid,
+  .optimization-grid,
+  .results-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  }
+
+  .geometry-grid > .ow-card:nth-of-type(2),
+  .simulation-grid > .ow-card:nth-of-type(3),
+  .optimization-grid > .ow-card:nth-of-type(3),
+  .results-grid > .ow-card:nth-of-type(2) {
+    grid-column: 1 / -1;
+  }
+}
+
+.simulation-grid .ow-card,
+.optimization-grid .ow-card,
+.geometry-grid .ow-card,
+.results-grid .ow-card {
+  position: relative;
+}
+
+.fingerings-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+}
+
+.fingerings-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.progress-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.progress-row progress {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-row progress::-webkit-progress-bar {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+}
+
+.progress-row progress::-webkit-progress-value {
+  background: linear-gradient(90deg, var(--accent), #38bdf8);
+  border-radius: 999px;
+}
+
+.progress-row progress::-moz-progress-bar {
+  background: linear-gradient(90deg, var(--accent), #38bdf8);
+  border-radius: 999px;
+}
+
+.tone-hole-input input,
+.export-actions input {
+  font-family: inherit;
 }
 
 .status-block {

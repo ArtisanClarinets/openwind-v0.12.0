@@ -10,10 +10,14 @@ export function loadSettings() {
   }
 }
 
-export function saveSettings(settings) {
+export function saveSettings(patch) {
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(settings));
+    const current = loadSettings();
+    const next = { ...current, ...patch };
+    window.localStorage.setItem(KEY, JSON.stringify(next));
+    return next;
   } catch (error) {
     console.warn('Unable to save settings', error);
+    return patch;
   }
 }

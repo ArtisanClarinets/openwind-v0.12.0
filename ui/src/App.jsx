@@ -20,6 +20,9 @@ export default function App() {
   return (
     <ToastProvider>
       <div className="layout">
+        <a href="#main-content" className="skip-link">
+          Skip to content
+        </a>
         <header className="topbar" role="banner">
           <div className="brand">OpenWInD Bb Clarinet Studio</div>
           <nav aria-label="Primary navigation">

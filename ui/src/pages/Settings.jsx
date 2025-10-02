@@ -17,7 +17,7 @@ export function SettingsPage() {
   const { notify } = useToast();
 
   useEffect(() => {
-    saveSettings({ ...stored, ...settings });
+    saveSettings(settings);
   }, [settings]);
 
   return (
