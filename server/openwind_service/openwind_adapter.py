@@ -90,9 +90,9 @@ class OpenWInDAdapter:
         # If caller passed a set of notes, constrain to those fingerings
         note_filter = list(fingering_notes) if fingering_notes else None
         entries = fingering_sequence(note_filter)
-        requested_notes = [entry["note"] for entry in entries]
-        if requested_notes:
-            fingering_chart = build_fingering_chart(geometry.tone_holes, notes=requested_notes)
+        requested_labels = [entry["label"] for entry in entries]
+        if requested_labels:
+            fingering_chart = build_fingering_chart(geometry.tone_holes, notes=requested_labels)
 
         freqs = np.linspace(options.freq_min_hz, options.freq_max_hz, options.n_points)
         solver = ImpedanceComputation(
@@ -117,7 +117,7 @@ class OpenWInDAdapter:
         base_impedance = np.asarray(solver.impedance)
         frequencies = np.asarray(solver.frequencies)
         intonation = self._compute_intonation(solver, entries, options)
-        note_labels = [entry["note"] for entry in entries]
+        note_labels = [entry["label"] for entry in entries]
         return SimulationBundle(
             frequencies=frequencies,
             impedance=base_impedance,
@@ -150,8 +150,9 @@ class OpenWInDAdapter:
     ) -> List[IntonationResult]:
         results: List[IntonationResult] = []
         for entry in entries:
-            note = str(entry["note"])
-            solver.set_note(note)
+            note_label = str(entry["label"])
+            solver.set_note(note_label)
+            written_note = str(entry["note"])
             resonances = np.asarray(
                 solver.resonance_frequencies(options.modes, display_warning=False)
             )
@@ -165,9 +166,14 @@ class OpenWInDAdapter:
                 transposition=options.transposition,
                 simple_name=True,
             )
+            display_note = names[0] if names else written_note
+            variant = str(entry.get("variant", "standard"))
+            if variant and variant != "standard":
+                display_note = f"{display_note} ({variant})"
+
             results.append(
                 IntonationResult(
-                    note=names[0] if names else note,
+                    note=display_note,
                     midi=int(entry.get("midi", 0)),
                     target_hz=float(targets[0]),
                     resonance_hz=float(resonances[0]),
