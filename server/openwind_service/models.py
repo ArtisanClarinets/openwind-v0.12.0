@@ -133,7 +133,6 @@ class OptRequest(BaseModel):
     seed: int = Field(default=1234)
     simulation: SimulationOptions = Field(default_factory=SimulationOptions)
     fingering_notes: Optional[List[str]] = None
-in
 
 
 class OptimizeResponse(BaseModel):
