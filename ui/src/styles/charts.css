@@ -1,0 +1,11 @@
+.ow-chart {
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  padding: 12px;
+  min-height: 260px;
+}
+
+.recharts-tooltip-wrapper {
+  backdrop-filter: blur(12px);
+}
