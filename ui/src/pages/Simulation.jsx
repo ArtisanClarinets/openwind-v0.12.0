@@ -10,7 +10,7 @@ import { simulate } from '../lib/apiClient.js';
 import { useDebounce } from '../hooks/useDebounce.js';
 import { useToast } from '../components/Toast.jsx';
 import { useWorkspace } from '../lib/workspace.jsx';
-import { DEFAULT_NOTES } from '../lib/constants.js';
+import { DEFAULT_NOTES, TRANSPOSITIONS } from '../lib/constants.js';
 
 function downloadFile(filename, content, type = 'application/json') {
   const blob = new Blob([content], { type });
@@ -72,6 +72,20 @@ export function SimulationPage() {
     () => simulationResult?.intonation?.map((item) => ({ note: item.note, cents: item.cents, midi: item.midi })) ?? [],
     [simulationResult]
   );
+
+  const metrics = useMemo(() => {
+    if (!simulationResult?.intonation || simulationResult.intonation.length === 0) {
+      return null;
+    }
+    const cents = simulationResult.intonation.map((item) => item.cents);
+    const avg = cents.reduce((sum, value) => sum + value, 0) / cents.length;
+    const maxAbs = Math.max(...cents.map((value) => Math.abs(value)));
+    return {
+      average: avg,
+      maxDeviation: maxAbs,
+      noteCount: cents.length
+    };
+  }, [simulationResult]);
 
   const notesColumns = useMemo(
     () => [
@@ -167,7 +181,35 @@ export function SimulationPage() {
             value={simulationOptions.n_points}
             onChange={(value) => setSimulationOptions((prev) => ({ ...prev, n_points: value }))}
           />
+          <NumberField
+            label="Modes"
+            value={simulationOptions.modes}
+            step={1}
+            min={1}
+            onChange={(value) => setSimulationOptions((prev) => ({ ...prev, modes: Math.max(1, Math.round(value)) }))}
+          />
+          <NumberField
+            label="Concert pitch"
+            value={simulationOptions.concert_pitch_hz}
+            unit="Hz"
+            step={0.1}
+            onChange={(value) => setSimulationOptions((prev) => ({ ...prev, concert_pitch_hz: value }))}
+          />
         </div>
+        <label className="ow-select">
+          <span>Transposition</span>
+          <select
+            value={simulationOptions.transposition}
+            onChange={(event) => setSimulationOptions((prev) => ({ ...prev, transposition: event.target.value }))}
+          >
+            {TRANSPOSITIONS.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <Switch
           id="simulation-autosim"
           label="Auto-run"
@@ -176,6 +218,14 @@ export function SimulationPage() {
           onChange={setAutosimulate}
         />
         {loading && <p aria-live="polite">Simulating…</p>}
+        {metrics && (
+          <div className="metrics-inline" aria-live="polite">
+            <span>{metrics.noteCount} notes analysed.</span>
+            <span>Avg deviation {metrics.average.toFixed(2)} cents.</span>
+            <span>Max abs deviation {metrics.maxDeviation.toFixed(2)} cents.</span>
+          </div>
+        )}
+
       </Card>
       <Card title="Fingerings">
         <div className="fingerings-grid">

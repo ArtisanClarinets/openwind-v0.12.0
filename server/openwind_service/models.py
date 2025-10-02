@@ -77,6 +77,17 @@ class SimulationOptions(BaseModel):
     freq_max_hz: float = Field(default=2500.0, gt=0)
     n_points: int = Field(default=2048, gt=10)
     modes: int = Field(default=8, gt=0)
+    concert_pitch_hz: float = Field(default=440.0, gt=0)
+    transposition: str = Field(default="Bb")
+
+    @validator("freq_max_hz")
+    def validate_frequency_range(cls, v: float, values: Dict[str, Any]) -> float:
+        min_freq = values.get("freq_min_hz", 0)
+        if v <= min_freq:
+            raise ValueError("freq_max_hz must be greater than freq_min_hz")
+        return v
+
+
 
 
 class SimRequest(BaseModel):
@@ -120,6 +131,9 @@ class OptRequest(BaseModel):
     bounds: OptimizationBounds = Field(default_factory=OptimizationBounds)
     max_iter: int = Field(default=40, gt=0)
     seed: int = Field(default=1234)
+    simulation: SimulationOptions = Field(default_factory=SimulationOptions)
+    fingering_notes: Optional[List[str]] = None
+in
 
 
 class OptimizeResponse(BaseModel):

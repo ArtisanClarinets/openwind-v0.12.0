@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Adapter layer that bridges Pydantic models with the OpenWInD API."""
 
 from __future__ import annotations
@@ -11,8 +12,13 @@ from openwind.impedance_computation import ImpedanceComputation
 from openwind.impedance_tools import match_freqs_with_notes
 
 from .fingerings_bb import build_fingering_chart, fingering_sequence
-from .models import Geometry, IntonationResult, SimulationOptions, ToneHole
-
+from .models import (
+    Geometry,
+    IntonationResult,
+    ObjectiveWeights,
+    SimulationOptions,
+    ToneHole,
+)
 
 MM_TO_M = 1e-3
 
@@ -21,6 +27,14 @@ MM_TO_M = 1e-3
 class SimulationData:
     frequencies: np.ndarray
     impedance: np.ndarray
+
+
+@dataclass
+class SimulationBundle:
+    frequencies: np.ndarray
+    impedance: np.ndarray
+    intonation: List[IntonationResult]
+    fingering_notes: List[str]
 
 
 class OpenWInDAdapter:
@@ -34,11 +48,11 @@ class OpenWInDAdapter:
     # ------------------------------------------------------------------
     def geometry_to_openwind(self, geometry: Geometry) -> Tuple[List[list], List[list], List[list]]:
         """Convert :class:`Geometry` to OpenWInD main bore, holes and fingering lists."""
-
         length_m = geometry.length_mm * MM_TO_M
         bore_radius = (geometry.bore_mm * MM_TO_M) / 2.0
         barrel_length = (geometry.barrel_length_mm or 65.0) * MM_TO_M
 
+        # Simple clarinet segmentation: barrel, body, bell (Bessel flare)
         bell_length = min(0.12, 0.18 * length_m)
         body_length = max(length_m - bell_length - barrel_length, 0.32)
 
@@ -53,6 +67,7 @@ class OpenWInDAdapter:
         return main_bore, holes, fingering
 
     def _toneholes_to_openwind(self, holes: Sequence[ToneHole]) -> List[list]:
+        # OpenWInD holes table: ["label","x","r","l"] then rows
         formatted: List[list] = [["label", "x", "r", "l"]]
         for hole in sorted(holes, key=lambda h: (h.axial_pos_mm, h.index)):
             x_m = hole.axial_pos_mm * MM_TO_M
@@ -64,15 +79,21 @@ class OpenWInDAdapter:
     # ------------------------------------------------------------------
     # Simulation helpers
     # ------------------------------------------------------------------
-    def compute_impedance(
+    def _build_solver(
         self,
         geometry: Geometry,
         options: SimulationOptions,
         fingering_notes: Iterable[str] | None = None,
-    ) -> SimulationData:
+    ) -> Tuple[ImpedanceComputation, List[Dict[str, object]]]:
         main_bore, holes, fingering_chart = self.geometry_to_openwind(geometry)
-        if fingering_notes is not None:
-            fingering_chart = build_fingering_chart(geometry.tone_holes, notes=fingering_notes)
+
+        # If caller passed a set of notes, constrain to those fingerings
+        note_filter = list(fingering_notes) if fingering_notes else None
+        entries = fingering_sequence(note_filter)
+        requested_notes = [entry["note"] for entry in entries]
+        if requested_notes:
+            fingering_chart = build_fingering_chart(geometry.tone_holes, notes=requested_notes)
+
         freqs = np.linspace(options.freq_min_hz, options.freq_max_hz, options.n_points)
         solver = ImpedanceComputation(
             freqs,
@@ -84,7 +105,34 @@ class OpenWInDAdapter:
             temperature=options.temp_C,
             losses=True,
         )
-        return SimulationData(frequencies=solver.frequencies, impedance=solver.impedance)
+        return solver, entries
+
+    def run_simulation(
+        self,
+        geometry: Geometry,
+        options: SimulationOptions,
+        fingering_notes: Iterable[str] | None = None,
+    ) -> SimulationBundle:
+        solver, entries = self._build_solver(geometry, options, fingering_notes)
+        base_impedance = np.asarray(solver.impedance)
+        frequencies = np.asarray(solver.frequencies)
+        intonation = self._compute_intonation(solver, entries, options)
+        note_labels = [entry["note"] for entry in entries]
+        return SimulationBundle(
+            frequencies=frequencies,
+            impedance=base_impedance,
+            intonation=intonation,
+            fingering_notes=note_labels,
+        )
+
+    def compute_impedance(
+        self,
+        geometry: Geometry,
+        options: SimulationOptions,
+        fingering_notes: Iterable[str] | None = None,
+    ) -> SimulationData:
+        bundle = self.run_simulation(geometry, options, fingering_notes)
+        return SimulationData(frequencies=bundle.frequencies, impedance=bundle.impedance)
 
     def predict_intonation(
         self,
@@ -92,40 +140,35 @@ class OpenWInDAdapter:
         options: SimulationOptions,
         fingering_notes: Iterable[str] | None = None,
     ) -> List[IntonationResult]:
-        note_entries = fingering_sequence(fingering_notes)
-        main_bore, holes, fingering_chart = self.geometry_to_openwind(geometry)
-        requested_notes = [entry["note"] for entry in note_entries]
-        if requested_notes:
-            fingering_chart = build_fingering_chart(geometry.tone_holes, notes=requested_notes)
-        freqs = np.linspace(options.freq_min_hz, options.freq_max_hz, options.n_points)
-        solver = ImpedanceComputation(
-            freqs,
-            main_bore,
-            holes,
-            fingering_chart,
-            unit="m",
-            diameter=False,
-            temperature=options.temp_C,
-            losses=True,
-        )
+        return self.run_simulation(geometry, options, fingering_notes).intonation
 
+    def _compute_intonation(
+        self,
+        solver: ImpedanceComputation,
+        entries: List[Dict[str, object]],
+        options: SimulationOptions,
+    ) -> List[IntonationResult]:
         results: List[IntonationResult] = []
-        for entry in note_entries:
+        for entry in entries:
             note = str(entry["note"])
             solver.set_note(note)
-            resonances = np.asarray(solver.resonance_frequencies(options.modes, display_warning=False))
+            resonances = np.asarray(
+                solver.resonance_frequencies(options.modes, display_warning=False)
+            )
             if resonances.size == 0:
                 continue
-            targets, cents, _ = match_freqs_with_notes(
-                resonances,
-                concert_pitch_A=options.temp_C >= 25.0 and 442.0 or 440.0,
-                transposition="Bb",
+
+            # Use options for concert pitch & transposition; return simple names
+            targets, cents, names = match_freqs_with_notes(
+                resonances[:1],
+                concert_pitch_A=options.concert_pitch_hz,
+                transposition=options.transposition,
                 simple_name=True,
             )
             results.append(
                 IntonationResult(
-                    note=note,
-                    midi=int(entry["midi"]),
+                    note=names[0] if names else note,
+                    midi=int(entry.get("midi", 0)),
                     target_hz=float(targets[0]),
                     resonance_hz=float(resonances[0]),
                     cents=float(cents[0]),
@@ -140,31 +183,131 @@ class OpenWInDAdapter:
         self,
         geometry: Geometry,
         options: SimulationOptions,
+        objective: ObjectiveWeights,
         max_iter: int,
         mutate: Callable[[Geometry, int], Geometry],
-        callback: Callable[[int, float, Geometry], None],
-    ) -> Tuple[Geometry, List[float], List[Dict[str, float]]]:
+        callback: Callable[[int, float, Geometry, Dict[str, float]], None],
+        fingering_notes: Iterable[str] | None = None,
+    ) -> Tuple[Geometry, List[float], List[Dict[str, float]], List[Dict[str, float]]]:
+        """Simple iterative optimizer with callback and sensitivity analysis.
+
+        Returns:
+            best_geom, convergence (best score per iter),
+            sensitivities (avg cents deltas per hole),
+            history (per-iter metrics)
+        """
         best_geom = geometry
-        best_score = self._score_geometry(best_geom, options)
+        best_score, best_metrics, _ = self._score_geometry(
+            best_geom, options, objective, fingering_notes
+        )
         convergence: List[float] = [best_score]
-        sensitivities: List[Dict[str, float]] = []
+        history: List[Dict[str, float]] = [{"iteration": 0, "score": best_score, **best_metrics}]
 
         for iteration in range(1, max_iter + 1):
             candidate = mutate(best_geom, iteration)
-            score = self._score_geometry(candidate, options)
+            score, metrics, _ = self._score_geometry(candidate, options, objective, fingering_notes)
+            history.append({"iteration": iteration, "score": score, **metrics})
             if score < best_score:
                 best_geom = candidate
                 best_score = score
+                best_metrics = metrics
             convergence.append(best_score)
-            callback(iteration, best_score, best_geom)
-            sensitivities.append({"iteration": iteration, "score": score})
-        return best_geom, convergence, sensitivities
+            callback(iteration, score, candidate, metrics)
 
-    def _score_geometry(self, geometry: Geometry, options: SimulationOptions) -> float:
-        predictions = self.predict_intonation(geometry, options)
-        if not predictions:
-            return float("inf")
-        return sum(abs(item.cents) for item in predictions) / len(predictions)
+        sensitivity = self._compute_sensitivity(best_geom, options, objective, fingering_notes)
+        return best_geom, convergence, sensitivity, history
+
+    def _score_geometry(
+        self,
+        geometry: Geometry,
+        options: SimulationOptions,
+        objective: ObjectiveWeights,
+        fingering_notes: Iterable[str] | None = None,
+    ) -> Tuple[float, Dict[str, float], SimulationBundle]:
+        bundle = self.run_simulation(geometry, options, fingering_notes)
+        metrics = self._evaluate_metrics(bundle, objective)
+        score = metrics["score"]
+        return score, metrics, bundle
+
+    def _evaluate_metrics(self, bundle: SimulationBundle, objective: ObjectiveWeights) -> Dict[str, float]:
+        # Intonation RMSE (cents)
+        cents = np.array([item.cents for item in bundle.intonation], dtype=float)
+        intonation_rmse = float(np.sqrt(np.mean(np.square(cents)))) if cents.size else float("inf")
+
+        # Impedance smoothness: average norm of first differences
+        magnitude = np.abs(bundle.impedance)
+        if magnitude.size > 1:
+            smoothness = float(np.linalg.norm(np.diff(magnitude)) / (magnitude.size - 1))
+        else:
+            smoothness = 0.0
+
+        # Register alignment (below/above A4/Pitch class split via MIDI 69)
+        lower = [item.cents for item in bundle.intonation if item.midi < 69]
+        upper = [item.cents for item in bundle.intonation if item.midi >= 69]
+        if lower and upper:
+            register_alignment = float(abs(np.mean(lower) - np.mean(upper)))
+        else:
+            register_alignment = float(np.mean(np.abs(cents))) if cents.size else 0.0
+
+        score = (
+            objective.intonation * intonation_rmse
+            + objective.impedance_smoothness * smoothness
+            + objective.register_alignment * register_alignment
+        )
+
+        return {
+            "intonation_rmse": float(intonation_rmse),
+            "impedance_smoothness": float(smoothness),
+            "register_alignment": float(register_alignment),
+            "score": float(score),
+        }
+
+    def _compute_sensitivity(
+        self,
+        geometry: Geometry,
+        options: SimulationOptions,
+        objective: ObjectiveWeights,
+        fingering_notes: Iterable[str] | None = None,
+    ) -> List[Dict[str, float]]:
+        """Per-hole sensitivity via small axial and diameter perturbations (finite diff proxy)."""
+        base_bundle = self.run_simulation(geometry, options, fingering_notes)
+        base_map = {item.note: item.cents for item in base_bundle.intonation}
+        sensitivities: List[Dict[str, float]] = []
+        if not base_map:
+            return sensitivities
+
+        for hole in geometry.tone_holes:
+            clone = geometry.model_copy(deep=True)
+            try:
+                idx = next(i for i, h in enumerate(clone.tone_holes) if h.index == hole.index)
+            except StopIteration:
+                continue
+
+            # Axial perturbation (+0.5 mm)
+            clone.tone_holes[idx].axial_pos_mm += 0.5
+            axial_bundle = self.run_simulation(clone, options, fingering_notes)
+            axial_map = {item.note: item.cents for item in axial_bundle.intonation}
+            axial_diff = [abs(axial_map.get(note, cents) - cents) for note, cents in base_map.items() if note in axial_map]
+
+            # Diameter perturbation (+0.3 mm, with a floor)
+            clone_diam = geometry.model_copy(deep=True)
+            try:
+                idx_d = next(i for i, h in enumerate(clone_diam.tone_holes) if h.index == hole.index)
+            except StopIteration:
+                continue
+            clone_diam.tone_holes[idx_d].diameter_mm = max(clone_diam.tone_holes[idx_d].diameter_mm + 0.3, 2.0)
+            diam_bundle = self.run_simulation(clone_diam, options, fingering_notes)
+            diam_map = {item.note: item.cents for item in diam_bundle.intonation}
+            diam_diff = [abs(diam_map.get(note, cents) - cents) for note, cents in base_map.items() if note in diam_map]
+
+            sensitivities.append(
+                {
+                    "hole_index": hole.index,
+                    "axial_delta_cents": float(np.mean(axial_diff)) if axial_diff else float("nan"),
+                    "diameter_delta_cents": float(np.mean(diam_diff)) if diam_diff else float("nan"),
+                }
+            )
+        return sensitivities
 
 
-__all__ = ["OpenWInDAdapter", "SimulationData"]
+__all__ = ["OpenWInDAdapter", "SimulationData", "SimulationBundle"]

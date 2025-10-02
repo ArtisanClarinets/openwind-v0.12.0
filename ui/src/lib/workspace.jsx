@@ -24,7 +24,10 @@ const defaultSimulationOptions = {
   freq_min_hz: 100,
   freq_max_hz: 2200,
   n_points: 2048,
-  modes: 8
+  modes: 8,
+  concert_pitch_hz: 440,
+  transposition: 'Bb'
+
 };
 
 const WorkspaceContext = createContext(null);

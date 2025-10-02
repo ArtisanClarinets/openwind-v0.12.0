@@ -6,7 +6,8 @@ from typing import Iterable, List
 
 import numpy as np
 
-from .models import IntonationResult, SimRequest, SimulationResult
+from .models import SimRequest, SimulationResult
+
 from .openwind_adapter import OpenWInDAdapter
 
 
@@ -17,16 +18,15 @@ class SimulationService:
         self._adapter = adapter
 
     def run(self, payload: SimRequest) -> SimulationResult:
-        fingering_notes = payload.fingering_notes or []
-        data = self._adapter.compute_impedance(payload.geometry, payload.options, fingering_notes)
-        intonation = self._adapter.predict_intonation(payload.geometry, payload.options, fingering_notes)
+        fingering_notes = payload.fingering_notes or None
+        bundle = self._adapter.run_simulation(payload.geometry, payload.options, fingering_notes)
         return SimulationResult(
-            freq_hz=data.frequencies.tolist(),
-            zin_abs=np.abs(data.impedance).tolist(),
-            zin_re=data.impedance.real.tolist(),
-            zin_im=data.impedance.imag.tolist(),
-            intonation=intonation,
-            fingering_notes=[item.note for item in intonation],
+            freq_hz=bundle.frequencies.tolist(),
+            zin_abs=np.abs(bundle.impedance).tolist(),
+            zin_re=bundle.impedance.real.tolist(),
+            zin_im=bundle.impedance.imag.tolist(),
+            intonation=bundle.intonation,
+            fingering_notes=bundle.fingering_notes,
         )
 
 

@@ -213,6 +213,27 @@ main {
   opacity: 0.8;
 }
 
+.ow-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.75rem;
+}
+
+.ow-select span {
+  font-weight: 600;
+  color: var(--color-text-subtle);
+}
+
+.ow-select select {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: var(--color-surface-elevated);
+  color: var(--color-text);
+}
+
+
 .ow-switch {
   display: flex;
   align-items: center;
@@ -717,3 +738,29 @@ main {
   border-radius: 10px;
   background: rgba(148, 163, 184, 0.12);
 }
+
+.metrics-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--color-text-subtle);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.metrics-grid dt {
+  font-weight: 600;
+  color: var(--color-text-subtle);
+}
+
+.metrics-grid dd {
+  margin: 0;
+  color: var(--color-text);
+}
+

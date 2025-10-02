@@ -63,6 +63,14 @@ export function ResultsPage() {
     return rows;
   }, [geometry, optimizationResult]);
 
+  const metricsSummary = useMemo(() => {
+    if (!optimizationResult?.history || optimizationResult.history.length === 0) {
+      return null;
+    }
+    return optimizationResult.history[optimizationResult.history.length - 1];
+  }, [optimizationResult]);
+
+
   const runExport = async (fmt) => {
     try {
       const payload = await exportGeometry(fmt, { geometry, metadata: { fmt } });
@@ -131,6 +139,29 @@ export function ResultsPage() {
           <Card title="Sensitivity">
             <ChartSensitivity data={optimizationResult.sensitivity} />
           </Card>
+          {metricsSummary && (
+            <Card title="Final metrics">
+              <dl className="metrics-grid">
+                <div>
+                  <dt>Composite score</dt>
+                  <dd>{metricsSummary.score?.toFixed?.(3) ?? metricsSummary.score}</dd>
+                </div>
+                <div>
+                  <dt>Intonation RMSE</dt>
+                  <dd>{metricsSummary.intonation_rmse?.toFixed?.(2) ?? metricsSummary.intonation_rmse} cents</dd>
+                </div>
+                <div>
+                  <dt>Impedance smoothness</dt>
+                  <dd>{metricsSummary.impedance_smoothness?.toFixed?.(3) ?? metricsSummary.impedance_smoothness}</dd>
+                </div>
+                <div>
+                  <dt>Register alignment</dt>
+                  <dd>{metricsSummary.register_alignment?.toFixed?.(2) ?? metricsSummary.register_alignment} cents</dd>
+                </div>
+              </dl>
+            </Card>
+          )}
+
         </>
       )}
       {simulationResult && (

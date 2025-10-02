@@ -13,7 +13,10 @@ export function OptimizationPage() {
     geometry,
     setGeometry,
     optimizationResult,
-    setOptimizationResult
+    setOptimizationResult,
+    simulationOptions,
+    selectedNotes
+
   } = useWorkspace();
   const [bounds, setBounds] = useState({
     bore_delta_mm: 0.4,
@@ -45,7 +48,7 @@ export function OptimizationPage() {
       const data = JSON.parse(event.data);
       setEvents((current) => [...current, data]);
       if (typeof data.pct === 'number') {
-        setProgress(data.pct);
+        setProgress(Math.max(0, Math.min(100, data.pct)));
       }
       if (data.msg === 'done') {
         setStreaming(false);
@@ -76,7 +79,15 @@ export function OptimizationPage() {
       return;
     }
     try {
-      const response = await startOptimization({ geometry, bounds, objective, seed, max_iter: maxIter });
+      const response = await startOptimization({
+        geometry,
+        bounds,
+        objective,
+        seed,
+        max_iter: maxIter,
+        simulation: simulationOptions,
+        fingering_notes: selectedNotes
+      });
       setJob(response);
       setEvents([]);
       setProgress(0);
@@ -98,7 +109,10 @@ export function OptimizationPage() {
     if (optimizationResult?.convergence) {
       return optimizationResult.convergence;
     }
-    return events.map((event, index) => event.score ?? events[index - 1]?.score ?? 0);
+    return events
+      .filter((event) => typeof event.score === 'number')
+      .map((event) => event.score);
+
   }, [events, optimizationResult]);
 
   return (
@@ -144,7 +158,13 @@ export function OptimizationPage() {
       <Card title="Progress log">
         <ul className="log" aria-live="polite">
           {events.map((event, index) => (
-            <li key={index}>{event.msg} {typeof event.pct === 'number' ? `(${event.pct}%)` : ''}</li>
+            <li key={index}>
+              <span>{event.msg}</span>
+              {typeof event.pct === 'number' && <span> ({event.pct}%)</span>}
+              {typeof event.score === 'number' && <span> • score {event.score.toFixed(3)}</span>}
+              {typeof event.intonation_rmse === 'number' && <span> • RMSE {event.intonation_rmse.toFixed(2)}¢</span>}
+            </li>
+
           ))}
         </ul>
       </Card>
