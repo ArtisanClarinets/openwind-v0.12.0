@@ -88,6 +88,8 @@ class SimulationOptions(BaseModel):
         return v
 
 
+
+
 class SimRequest(BaseModel):
     geometry: Geometry
     options: SimulationOptions = Field(default_factory=SimulationOptions)
@@ -131,6 +133,7 @@ class OptRequest(BaseModel):
     seed: int = Field(default=1234)
     simulation: SimulationOptions = Field(default_factory=SimulationOptions)
     fingering_notes: Optional[List[str]] = None
+in
 
 
 class OptimizeResponse(BaseModel):

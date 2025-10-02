@@ -8,3 +8,4 @@ export const DEFAULT_NOTES = [
 ];
 
 export const TRANSPOSITIONS = ['Bb', 'A', 'C', 'F', 'Eb'];
+

@@ -28,6 +28,7 @@ export function ChartSensitivity({ data }) {
           <Legend />
           <Bar dataKey="axial" name="Axial +0.5mm" fill="#38bdf8" radius={[6, 6, 0, 0]} />
           <Bar dataKey="diameter" name="Diameter +0.3mm" fill="#facc15" radius={[6, 6, 0, 0]} />
+
         </BarChart>
       </ResponsiveContainer>
     </div>

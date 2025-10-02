@@ -70,6 +70,7 @@ export function ResultsPage() {
     return optimizationResult.history[optimizationResult.history.length - 1];
   }, [optimizationResult]);
 
+
   const runExport = async (fmt) => {
     try {
       const payload = await exportGeometry(fmt, { geometry, metadata: { fmt } });
@@ -160,6 +161,7 @@ export function ResultsPage() {
               </dl>
             </Card>
           )}
+
         </>
       )}
       {simulationResult && (

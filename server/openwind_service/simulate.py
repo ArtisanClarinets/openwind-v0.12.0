@@ -7,6 +7,7 @@ from typing import Iterable, List
 import numpy as np
 
 from .models import SimRequest, SimulationResult
+
 from .openwind_adapter import OpenWInDAdapter
 
 

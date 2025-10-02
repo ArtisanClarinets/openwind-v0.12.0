@@ -77,6 +77,7 @@ def recommend_geometry(payload: RecommendRequest) -> RecommendResponse:
             "scale": payload.scale,
             "player_pref": payload.player_pref.profile,
             "min_spacing_mm": spacing_min,
+
         },
     )
     notes = [fnote for fnote in (payload.include_register, "standard", "altissimo") if fnote]

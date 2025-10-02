@@ -27,6 +27,7 @@ const defaultSimulationOptions = {
   modes: 8,
   concert_pitch_hz: 440,
   transposition: 'Bb'
+
 };
 
 const WorkspaceContext = createContext(null);

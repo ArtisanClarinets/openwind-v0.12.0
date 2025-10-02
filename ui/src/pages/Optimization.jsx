@@ -16,6 +16,7 @@ export function OptimizationPage() {
     setOptimizationResult,
     simulationOptions,
     selectedNotes
+
   } = useWorkspace();
   const [bounds, setBounds] = useState({
     bore_delta_mm: 0.4,
@@ -111,6 +112,7 @@ export function OptimizationPage() {
     return events
       .filter((event) => typeof event.score === 'number')
       .map((event) => event.score);
+
   }, [events, optimizationResult]);
 
   return (
@@ -162,6 +164,7 @@ export function OptimizationPage() {
               {typeof event.score === 'number' && <span> • score {event.score.toFixed(3)}</span>}
               {typeof event.intonation_rmse === 'number' && <span> • RMSE {event.intonation_rmse.toFixed(2)}¢</span>}
             </li>
+
           ))}
         </ul>
       </Card>

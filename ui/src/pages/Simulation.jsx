@@ -209,6 +209,7 @@ export function SimulationPage() {
             ))}
           </select>
         </label>
+
         <Switch
           id="simulation-autosim"
           label="Auto-run"
@@ -224,6 +225,7 @@ export function SimulationPage() {
             <span>Max abs deviation {metrics.maxDeviation.toFixed(2)} cents.</span>
           </div>
         )}
+
       </Card>
       <Card title="Fingerings">
         <div className="fingerings-grid">
