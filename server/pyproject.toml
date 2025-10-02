@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openwind-service"
+version = "0.1.0"
+description = "FastAPI microservice wrapping OpenWInD for Bb clarinet workflows"
+authors = [{name = "OpenWInD Studio"}]
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.115.0",
+    "uvicorn[standard]==0.30.1",
+    "orjson==3.10.7",
+    "pydantic==2.9.2",
+    "numpy==1.26.4",
+    "scipy==1.12.0",
+    "python-dateutil==2.9.0.post0",
+]
+
+[project.optional-dependencies]
+step = ["cadquery==2.4.0"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["openwind_service*"]
