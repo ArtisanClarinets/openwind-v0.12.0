@@ -93,6 +93,27 @@ main {
   padding: clamp(20px, 3vw, 32px);
 }
 
+.guidance-card {
+  border-left: 4px solid var(--accent);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(15, 23, 42, 0.6));
+}
+
+.guidance-card .ow-card-body {
+  gap: 12px;
+}
+
+.guidance-card ol,
+.guidance-card ul {
+  margin: 0;
+  padding-left: 1.4rem;
+  display: grid;
+  gap: 6px;
+}
+
+.guidance-card li {
+  line-height: 1.5;
+}
+
 .ow-card-header {
   display: flex;
   justify-content: space-between;
@@ -223,6 +244,12 @@ main {
 .ow-select span {
   font-weight: 600;
   color: var(--color-text-subtle);
+}
+
+.select-help {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.75);
 }
 
 .ow-select select {

@@ -117,11 +117,48 @@ export function OptimizationPage() {
 
   return (
     <div className="page-grid optimization-grid">
+      <Card className="guidance-card" title="Let OpenWInD suggest improvements">
+        <p>
+          Optimization runs a series of server-side simulations to nudge your design toward chosen
+          goals. If you are unsure about any field, hover the labels – each one now spells out what it
+          controls in everyday language.
+        </p>
+        <ol>
+          <li>
+            Decide what you want to improve first: intonation accuracy, impedance smoothness or
+            register alignment.
+          </li>
+          <li>Confirm how far the algorithm may move each parameter in “Bounds &amp; settings”.</li>
+          <li>
+            Start the job and watch the live log. You can stop at any time, then load the best result
+            in the Results page.
+          </li>
+        </ol>
+      </Card>
       <Card title="Objective weights">
+        <p>
+          The optimizer blends these numbers into a single score. Higher values make that aspect more
+          important when searching for solutions.
+        </p>
         <div className="grid-two">
-          <NumberField label="Intonation" value={objective.intonation} onChange={(value) => setObjective((prev) => ({ ...prev, intonation: value }))} />
-          <NumberField label="Impedance smoothness" value={objective.impedance_smoothness} onChange={(value) => setObjective((prev) => ({ ...prev, impedance_smoothness: value }))} />
-          <NumberField label="Register alignment" value={objective.register_alignment} onChange={(value) => setObjective((prev) => ({ ...prev, register_alignment: value }))} />
+          <NumberField
+            label="Intonation"
+            value={objective.intonation}
+            description="Prioritise tuning accuracy across your selected notes."
+            onChange={(value) => setObjective((prev) => ({ ...prev, intonation: value }))}
+          />
+          <NumberField
+            label="Impedance smoothness"
+            value={objective.impedance_smoothness}
+            description="Encourage evenly spaced impedance peaks for a consistent response."
+            onChange={(value) => setObjective((prev) => ({ ...prev, impedance_smoothness: value }))}
+          />
+          <NumberField
+            label="Register alignment"
+            value={objective.register_alignment}
+            description="Helps the throat, clarion and altissimo registers line up in pitch."
+            onChange={(value) => setObjective((prev) => ({ ...prev, register_alignment: value }))}
+          />
         </div>
       </Card>
       <Card
@@ -135,12 +172,44 @@ export function OptimizationPage() {
           </div>
         }
       >
+        <p>
+          Bounds limit how radically the optimizer may alter your design. Start with the defaults; if
+          changes feel too subtle, expand them gradually.
+        </p>
         <div className="grid-two">
-          <NumberField label="Bore delta" value={bounds.bore_delta_mm} unit="mm" onChange={(value) => setBounds((prev) => ({ ...prev, bore_delta_mm: value }))} />
-          <NumberField label="Hole diameter delta" value={bounds.hole_diameter_delta_mm} unit="mm" onChange={(value) => setBounds((prev) => ({ ...prev, hole_diameter_delta_mm: value }))} />
-          <NumberField label="Hole position delta" value={bounds.hole_position_delta_mm} unit="mm" onChange={(value) => setBounds((prev) => ({ ...prev, hole_position_delta_mm: value }))} />
-          <NumberField label="Max iterations" value={maxIter} onChange={(value) => setMaxIter(Math.max(5, Math.round(value)))} />
-          <NumberField label="Seed" value={seed} onChange={(value) => setSeed(Math.round(value))} />
+          <NumberField
+            label="Bore delta"
+            value={bounds.bore_delta_mm}
+            unit="mm"
+            description="Maximum bore adjustment per step. Larger values explore bolder shapes."
+            onChange={(value) => setBounds((prev) => ({ ...prev, bore_delta_mm: value }))}
+          />
+          <NumberField
+            label="Hole diameter delta"
+            value={bounds.hole_diameter_delta_mm}
+            unit="mm"
+            description="How much each tone hole can widen or narrow during optimisation."
+            onChange={(value) => setBounds((prev) => ({ ...prev, hole_diameter_delta_mm: value }))}
+          />
+          <NumberField
+            label="Hole position delta"
+            value={bounds.hole_position_delta_mm}
+            unit="mm"
+            description="Maximum axial movement allowed for tone holes between iterations."
+            onChange={(value) => setBounds((prev) => ({ ...prev, hole_position_delta_mm: value }))}
+          />
+          <NumberField
+            label="Max iterations"
+            value={maxIter}
+            description="More iterations give the optimiser extra chances to refine the design."
+            onChange={(value) => setMaxIter(Math.max(5, Math.round(value)))}
+          />
+          <NumberField
+            label="Seed"
+            value={seed}
+            description="Fixed seeds make runs repeatable; change it to explore alternative paths."
+            onChange={(value) => setSeed(Math.round(value))}
+          />
         </div>
         <div className="progress-row">
           <label htmlFor="optimization-progress">Progress</label>
@@ -156,6 +225,10 @@ export function OptimizationPage() {
         />
       </Card>
       <Card title="Progress log">
+        <p>
+          Messages arrive in real time as the server works. “Score” highlights the current best
+          design; you can stop whenever the improvements level off.
+        </p>
         <ul className="log" aria-live="polite">
           {events.map((event, index) => (
             <li key={index}>
@@ -169,6 +242,10 @@ export function OptimizationPage() {
         </ul>
       </Card>
       <Card title="Convergence">
+        <p>
+          This chart shows how the optimisation score changes over time. A flat line means the
+          algorithm has settled on the best answer it can find.
+        </p>
         <ChartConvergence data={convergence} />
       </Card>
       {optimizationResult && (
@@ -180,7 +257,10 @@ export function OptimizationPage() {
             </Button>
           }
         >
-          <p>Job {optimizationResult.job_id} finished {optimizationResult.status}.</p>
+          <p>
+            Job {optimizationResult.job_id} finished {optimizationResult.status}. Review the Results
+            page to inspect the geometry in detail or download exports.
+          </p>
         </Card>
       )}
     </div>

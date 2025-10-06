@@ -124,7 +124,23 @@ export function ResultsPage() {
 
   return (
     <div className="page-grid results-grid">
+      <Card className="guidance-card" title="Check, compare and share your work">
+        <p>
+          Results gathers everything you have produced so far. Use it to pull in optimisation jobs,
+          compare them with your current geometry and download files that instrument makers or CAD
+          packages can open without extra processing.
+        </p>
+        <ol>
+          <li>Fetch an optimisation job if you ran one earlier – the ID comes from the live log.</li>
+          <li>Review the tables and charts to understand how the geometry changed.</li>
+          <li>Export clean files in the format your collaborators prefer.</li>
+        </ol>
+      </Card>
       <Card title="Exports" action={<Button onClick={loadResult}>Load job</Button>}>
+        <p>
+          Paste an optimisation job identifier to refresh the data, then choose an export format. We
+          keep the latest download link handy so you can share it immediately.
+        </p>
         <div className="export-actions">
           <input value={jobId} onChange={(event) => setJobId(event.target.value)} placeholder="Optimization job id" />
           <div className="export-buttons">
@@ -153,21 +169,41 @@ export function ResultsPage() {
           )
         }
       >
+        <p>
+          This table reflects the geometry currently loaded in your workspace – edit the geometry page
+          and the numbers here will update instantly.
+        </p>
         <Table columns={holeColumns} data={geometry.tone_holes ?? []} />
       </Card>
       {optimizationResult && (
         <>
           <Card title="Before vs after">
+            <p>
+              Compare each tone hole from your baseline against the optimised layout. Deltas show how
+              far the algorithm moved every dimension.
+            </p>
             <Table columns={comparisonColumns} data={comparisonData} />
           </Card>
           <Card title="Convergence">
+            <p>
+              A downward curve means the optimisation kept finding better solutions. Plateaus indicate
+              the run has stabilised.
+            </p>
             <ChartConvergence data={optimizationResult.convergence} />
           </Card>
           <Card title="Sensitivity">
+            <p>
+              Sensitivity highlights which design parameters influenced the score most. Focus your
+              manual tweaks on the highest bars for bigger impact.
+            </p>
             <ChartSensitivity data={optimizationResult.sensitivity} />
           </Card>
           {metricsSummary && (
             <Card title="Final metrics">
+              <p>
+                These figures summarise the last optimisation step. Lower RMSE values indicate more
+                accurate tuning, while higher composite scores mean a better overall fit.
+              </p>
               <dl className="metrics-grid">
                 <div>
                   <dt>Composite score</dt>
@@ -196,6 +232,10 @@ export function ResultsPage() {
           <p>
             {simulationResult.intonation.length} notes analysed with frequency range {simulationResult.freq_hz[0].toFixed(1)}–
             {simulationResult.freq_hz.at(-1).toFixed(1)} Hz.
+          </p>
+          <p>
+            Use this summary as a reminder of the environment assumed by the optimisation. Re-run the
+            simulation after applying a new geometry to keep everything in sync.
           </p>
         </Card>
       )}

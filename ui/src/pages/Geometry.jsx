@@ -299,7 +299,36 @@ export function GeometryPage() {
 
   return (
     <div className="page-grid geometry-grid">
+      <Card className="guidance-card" title="How to shape your instrument">
+        <p>
+          Start with the bore dimensions, then review each tone hole row in the table below. You can
+          drag the order, duplicate entries or remove them entirely. If a value falls outside the
+          recommended range, a red hint will appear so you know what to adjust.
+        </p>
+        <ol>
+          <li>
+            Set your desired concert pitch and player preferences in “Recommendation options” to
+            receive tailored layouts.
+          </li>
+          <li>
+            Confirm the bore, instrument length and barrel dimensions – these set the physical scale
+            for every calculation.
+          </li>
+          <li>
+            Edit tone holes directly in the table. Buttons on the right let you reorder, clone or
+            delete rows in one click.
+          </li>
+          <li>
+            Adjust the constraints at the bottom if you want the automatic tools to explore a wider
+            (or tighter) range of designs.
+          </li>
+        </ol>
+      </Card>
       <Card title="Recommendation options">
+        <p>
+          Tell OpenWInD what kind of player and repertoire you are targeting. These preferences feed
+          into the server-side recommender that can populate the tone-hole layout for you.
+        </p>
         <div className="grid-two">
           <NumberField
             label="Target A4"
@@ -308,10 +337,15 @@ export function GeometryPage() {
             step={0.1}
             min={430}
             max={450}
+            description="Sets the reference pitch for all automatic suggestions."
             onChange={(value) => setRecommendationOptions((prev) => ({ ...prev, targetA4Hz: value }))}
           />
           <label className="ow-select">
             <span>Pitch scale</span>
+            <p className="select-help">
+              Choose the tuning system that best matches your ensemble. Equal temperament is the
+              modern default.
+            </p>
             <select
               value={recommendationOptions.scale}
               onChange={(event) => setRecommendationOptions((prev) => ({ ...prev, scale: event.target.value }))}
@@ -325,6 +359,7 @@ export function GeometryPage() {
           </label>
           <label className="ow-select">
             <span>Register focus</span>
+            <p className="select-help">Tell the recommender which playing register to favour.</p>
             <select
               value={recommendationOptions.includeRegister}
               onChange={(event) =>
@@ -340,6 +375,7 @@ export function GeometryPage() {
           </label>
           <label className="ow-select">
             <span>Player profile</span>
+            <p className="select-help">Match the response to the experience level of the player.</p>
             <select
               value={recommendationOptions.playerProfile}
               onChange={(event) =>
@@ -355,6 +391,7 @@ export function GeometryPage() {
           </label>
           <label className="ow-select">
             <span>Articulation</span>
+            <p className="select-help">Fine-tune how resistant or flexible the tone holes should feel.</p>
             <select
               value={recommendationOptions.playerArticulation}
               onChange={(event) =>
@@ -370,6 +407,7 @@ export function GeometryPage() {
           </label>
           <label className="ow-select">
             <span>Brightness</span>
+            <p className="select-help">Pick a tonal colour ranging from dark and mellow to bright.</p>
             <select
               value={recommendationOptions.playerBrightness}
               onChange={(event) =>
@@ -396,10 +434,32 @@ export function GeometryPage() {
           </div>
         }
       >
+        <p>
+          These core dimensions define the clarinet body. They accept sensible defaults, so feel free
+          to experiment – you can always reload the preset above.
+        </p>
         <div className="grid-two">
-          <NumberField label="Bore" value={geometry.bore_mm} unit="mm" onChange={(value) => setGeometry((prev) => ({ ...prev, bore_mm: value }))} />
-          <NumberField label="Length" value={geometry.length_mm} unit="mm" onChange={(value) => setGeometry((prev) => ({ ...prev, length_mm: value }))} />
-          <NumberField label="Barrel" value={geometry.barrel_length_mm} unit="mm" onChange={(value) => setGeometry((prev) => ({ ...prev, barrel_length_mm: value }))} />
+          <NumberField
+            label="Bore"
+            value={geometry.bore_mm}
+            unit="mm"
+            description="Internal diameter of the main bore. Larger values generally darken the tone."
+            onChange={(value) => setGeometry((prev) => ({ ...prev, bore_mm: value }))}
+          />
+          <NumberField
+            label="Length"
+            value={geometry.length_mm}
+            unit="mm"
+            description="Overall tube length from mouthpiece to bell end."
+            onChange={(value) => setGeometry((prev) => ({ ...prev, length_mm: value }))}
+          />
+          <NumberField
+            label="Barrel"
+            value={geometry.barrel_length_mm}
+            unit="mm"
+            description="Length of the detachable barrel section at the top of the clarinet."
+            onChange={(value) => setGeometry((prev) => ({ ...prev, barrel_length_mm: value }))}
+          />
         </div>
         <Switch
           id="autosimulate-toggle"
@@ -417,6 +477,10 @@ export function GeometryPage() {
           </Button>
         }
       >
+        <p>
+          Enter measurements for each tone hole. Hover over the “State” chip to toggle between open
+          and closed fingerings. Use the arrow buttons to reorder the layout without retyping values.
+        </p>
         <Table columns={columns} data={geometry.tone_holes} />
         {issues.length > 0 && (
           <div className="validation-block" role="alert">
@@ -430,6 +494,10 @@ export function GeometryPage() {
         )}
       </Card>
       <Card title="Constraints">
+        <p>
+          Constraints keep automatic tools within practical limits. If you want broader
+          experimentation, widen these values; for production-ready plans, tighten them.
+        </p>
         <div className="grid-two">
           <NumberField
             label="Minimum spacing"
@@ -437,6 +505,7 @@ export function GeometryPage() {
             unit="mm"
             min={2}
             step={0.5}
+            description="Enforces a safe minimum distance between tone holes."
             onChange={(value) => setConstraints({ minSpacingMm: value })}
           />
           <NumberField
@@ -445,6 +514,7 @@ export function GeometryPage() {
             unit="mm"
             min={2}
             step={0.1}
+            description="Prevents the recommender from suggesting unplayably small holes."
             onChange={(value) => setConstraints({ minDiameterMm: value })}
           />
           <NumberField
@@ -453,6 +523,7 @@ export function GeometryPage() {
             unit="mm"
             min={constraints.minDiameterMm}
             step={0.1}
+            description="Upper limit for hole size, keeping ergonomics comfortable."
             onChange={(value) => setConstraints({ maxDiameterMm: value })}
           />
           <NumberField
@@ -460,6 +531,7 @@ export function GeometryPage() {
             value={constraints.maxHoleCount}
             min={1}
             step={1}
+            description="Caps how many tone holes the automatic tools may create."
             onChange={(value) => setConstraints({ maxHoleCount: Math.round(value) })}
           />
         </div>
