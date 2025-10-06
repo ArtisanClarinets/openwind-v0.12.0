@@ -269,16 +269,36 @@ export function GeometryPage() {
         accessor: 'actions',
         cell: (row) => (
           <div className="hole-actions">
-            <Button variant="ghost" size="sm" onClick={() => moveHole(row.index, -1)} aria-label={`Move hole ${row.index + 1} up`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => moveHole(row.index, -1)}
+              aria-label={`Move hole ${row.index + 1} up`}
+            >
               ↑
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => moveHole(row.index, 1)} aria-label={`Move hole ${row.index + 1} down`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => moveHole(row.index, 1)}
+              aria-label={`Move hole ${row.index + 1} down`}
+            >
               ↓
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => duplicateHole(row.index)} aria-label={`Duplicate hole ${row.index + 1}`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => duplicateHole(row.index)}
+              aria-label={`Duplicate hole ${row.index + 1}`}
+            >
               ⧉
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => removeHole(row.index)} aria-label={`Remove hole ${row.index + 1}`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => removeHole(row.index)}
+              aria-label={`Remove hole ${row.index + 1}`}
+            >
               ✕
             </Button>
           </div>
@@ -492,6 +512,25 @@ export function GeometryPage() {
             </ul>
           </div>
         )}
+      </Card>
+      <Card title="Visualise the clarinet body">
+        <p>
+          These interactive visuals mirror the OpenWInD demo: the chart shows where each chimney
+          sits along the tube and how its diameter compares to the bore, while the preview sketches a
+          simplified clarinet body so you can spot spacing or height imbalances at a glance.
+        </p>
+        <div className="geometry-visual-grid">
+          <ChartToneHoles
+            toneHoles={geometry.tone_holes}
+            boreMm={geometry.bore_mm}
+            lengthMm={geometry.length_mm}
+          />
+          <ClarinetPreview
+            toneHoles={geometry.tone_holes}
+            lengthMm={geometry.length_mm}
+            boreMm={geometry.bore_mm}
+          />
+        </div>
       </Card>
       <Card title="Constraints">
         <p>
