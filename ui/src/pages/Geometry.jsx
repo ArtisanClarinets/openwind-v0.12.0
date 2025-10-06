@@ -7,9 +7,17 @@ import { Switch } from '../components/Switch.jsx';
 import { useDebounce } from '../hooks/useDebounce.js';
 import { recommend, fetchPreset } from '../lib/apiClient.js';
 import { validateHoleSpacing } from '../lib/validators.js';
-import { loadSettings } from '../lib/storage.js';
 import { useToast } from '../components/Toast.jsx';
 import { useWorkspace } from '../lib/workspace.jsx';
+import {
+  PLAYER_ARTICULATIONS,
+  PLAYER_BRIGHTNESS,
+  PLAYER_PROFILES,
+  RECOMMENDATION_SCALES,
+  REGISTER_OPTIONS
+} from '../lib/constants.js';
+import { ChartToneHoles } from '../components/ChartToneHoles.jsx';
+import { ClarinetPreview } from '../components/ClarinetPreview.jsx';
 
 export function GeometryPage() {
   const {
@@ -19,7 +27,9 @@ export function GeometryPage() {
     setConstraints,
     autosimulate,
     setAutosimulate,
-    setLastRecommendation
+    setLastRecommendation,
+    recommendationOptions,
+    setRecommendationOptions
   } = useWorkspace();
   const [issues, setIssues] = useState([]);
   const debouncedGeometry = useDebounce(geometry, 320);
@@ -41,13 +51,35 @@ export function GeometryPage() {
     const holes = geometry.tone_holes ?? [];
     const diameters = holes.map((hole) => hole.diameter_mm);
     const spacing = holes.slice(1).map((hole, index) => hole.axial_pos_mm - holes[index].axial_pos_mm);
+    const undercuts = holes.map((hole) => hole.undercut_mm ?? 0);
     return {
       holeCount: holes.length,
       closed: holes.filter((hole) => hole.closed).length,
       minDiameter: diameters.length ? Math.min(...diameters) : null,
       maxDiameter: diameters.length ? Math.max(...diameters) : null,
       minSpacing: spacing.length ? Math.min(...spacing) : null,
-      maxSpacing: spacing.length ? Math.max(...spacing) : null
+      maxSpacing: spacing.length ? Math.max(...spacing) : null,
+      minUndercut: undercuts.length ? Math.min(...undercuts) : null,
+      maxUndercut: undercuts.length ? Math.max(...undercuts) : null
+    };
+  }, [geometry]);
+
+  const chimneySummary = useMemo(() => {
+    const holes = geometry.tone_holes ?? [];
+    const topJoint = holes.slice(0, 3);
+    const bottomJoint = holes.slice(3, 6);
+    const rest = holes.slice(6);
+    const average = (items, key) =>
+      items.length > 0
+        ? items.reduce((total, hole) => total + Number(hole[key] ?? 0), 0) / items.length
+        : null;
+    return {
+      topCount: topJoint.length,
+      bottomCount: bottomJoint.length,
+      extraCount: rest.length,
+      topAverage: average(topJoint, 'chimney_mm'),
+      bottomAverage: average(bottomJoint, 'chimney_mm'),
+      extraAverage: average(rest, 'chimney_mm')
     };
   }, [geometry]);
 
@@ -123,6 +155,7 @@ export function GeometryPage() {
         axial_pos_mm: lastHole ? lastHole.axial_pos_mm + constraints.minSpacingMm + 2 : 30,
         diameter_mm: Math.max(8, constraints.minDiameterMm + 1),
         chimney_mm: 12,
+        undercut_mm: lastHole?.undercut_mm ?? 0.8,
         closed: false
       };
       return {
@@ -134,16 +167,21 @@ export function GeometryPage() {
 
   const handleRecommend = useCallback(async () => {
     try {
-      const globals = loadSettings();
       const response = await recommend({
-        target_a4_hz: globals.a4 ?? 440,
-        scale: 'equal',
+        target_a4_hz: recommendationOptions.targetA4Hz,
+        scale: recommendationOptions.scale,
         constraints: {
           min_spacing_mm: constraints.minSpacingMm,
           max_holes: constraints.maxHoleCount,
           min_diameter_mm: constraints.minDiameterMm,
           max_diameter_mm: constraints.maxDiameterMm
-        }
+        },
+        player_pref: {
+          profile: recommendationOptions.playerProfile,
+          articulation: recommendationOptions.playerArticulation,
+          brightness: recommendationOptions.playerBrightness
+        },
+        include_register: recommendationOptions.includeRegister
       });
       setGeometry(response.geometry);
       setLastRecommendation({
@@ -162,7 +200,8 @@ export function GeometryPage() {
     constraints.minSpacingMm,
     notify,
     setGeometry,
-    setLastRecommendation
+    setLastRecommendation,
+    recommendationOptions
   ]);
 
   const handlePreset = useCallback(async () => {
@@ -228,6 +267,11 @@ export function GeometryPage() {
         cell: (row) => renderNumericInput(row, 'chimney_mm', { min: 4, step: 0.5 })
       },
       {
+        header: 'Undercut (mm)',
+        accessor: 'undercut_mm',
+        cell: (row) => renderNumericInput(row, 'undercut_mm', { min: 0, step: 0.05 })
+      },
+      {
         header: 'State',
         accessor: 'closed',
         cell: (row) => (
@@ -246,16 +290,36 @@ export function GeometryPage() {
         accessor: 'actions',
         cell: (row) => (
           <div className="hole-actions">
-            <Button variant="ghost" size="sm" onClick={() => moveHole(row.index, -1)} aria-label={`Move hole ${row.index + 1} up`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => moveHole(row.index, -1)}
+              aria-label={`Move hole ${row.index + 1} up`}
+            >
               ↑
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => moveHole(row.index, 1)} aria-label={`Move hole ${row.index + 1} down`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => moveHole(row.index, 1)}
+              aria-label={`Move hole ${row.index + 1} down`}
+            >
               ↓
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => duplicateHole(row.index)} aria-label={`Duplicate hole ${row.index + 1}`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => duplicateHole(row.index)}
+              aria-label={`Duplicate hole ${row.index + 1}`}
+            >
               ⧉
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => removeHole(row.index)} aria-label={`Remove hole ${row.index + 1}`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => removeHole(row.index)}
+              aria-label={`Remove hole ${row.index + 1}`}
+            >
               ✕
             </Button>
           </div>
@@ -276,6 +340,131 @@ export function GeometryPage() {
 
   return (
     <div className="page-grid geometry-grid">
+      <Card className="guidance-card" title="How to shape your instrument">
+        <p>
+          Start with the bore dimensions, then review each tone hole row in the table below. You can
+          drag the order, duplicate entries or remove them entirely. If a value falls outside the
+          recommended range, a red hint will appear so you know what to adjust.
+        </p>
+        <ol>
+          <li>
+            Set your desired concert pitch and player preferences in “Recommendation options” to
+            receive tailored layouts.
+          </li>
+          <li>
+            Confirm the bore, instrument length and barrel dimensions – these set the physical scale
+            for every calculation.
+          </li>
+          <li>
+            Edit tone holes directly in the table. Buttons on the right let you reorder, clone or
+            delete rows in one click. Remember that a B♭ soprano clarinet uses three upper-joint
+            chimneys for the left hand and three lower-joint chimneys for the right hand.
+          </li>
+          <li>
+            Adjust the constraints at the bottom if you want the automatic tools to explore a wider
+            (or tighter) range of designs.
+          </li>
+        </ol>
+      </Card>
+      <Card title="Recommendation options">
+        <p>
+          Tell OpenWInD what kind of player and repertoire you are targeting. These preferences feed
+          into the server-side recommender that can populate the tone-hole layout for you.
+        </p>
+        <div className="grid-two">
+          <NumberField
+            label="Target A4"
+            value={recommendationOptions.targetA4Hz}
+            unit="Hz"
+            step={0.1}
+            min={430}
+            max={450}
+            description="Sets the reference pitch for all automatic suggestions."
+            onChange={(value) => setRecommendationOptions((prev) => ({ ...prev, targetA4Hz: value }))}
+          />
+          <label className="ow-select">
+            <span>Pitch scale</span>
+            <p className="select-help">
+              Choose the tuning system that best matches your ensemble. Equal temperament is the
+              modern default.
+            </p>
+            <select
+              value={recommendationOptions.scale}
+              onChange={(event) => setRecommendationOptions((prev) => ({ ...prev, scale: event.target.value }))}
+            >
+              {RECOMMENDATION_SCALES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="ow-select">
+            <span>Register focus</span>
+            <p className="select-help">Tell the recommender which playing register to favour.</p>
+            <select
+              value={recommendationOptions.includeRegister}
+              onChange={(event) =>
+                setRecommendationOptions((prev) => ({ ...prev, includeRegister: event.target.value }))
+              }
+            >
+              {REGISTER_OPTIONS.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="ow-select">
+            <span>Player profile</span>
+            <p className="select-help">Match the response to the experience level of the player.</p>
+            <select
+              value={recommendationOptions.playerProfile}
+              onChange={(event) =>
+                setRecommendationOptions((prev) => ({ ...prev, playerProfile: event.target.value }))
+              }
+            >
+              {PLAYER_PROFILES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="ow-select">
+            <span>Articulation</span>
+            <p className="select-help">Fine-tune how resistant or flexible the tone holes should feel.</p>
+            <select
+              value={recommendationOptions.playerArticulation}
+              onChange={(event) =>
+                setRecommendationOptions((prev) => ({ ...prev, playerArticulation: event.target.value }))
+              }
+            >
+              {PLAYER_ARTICULATIONS.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="ow-select">
+            <span>Brightness</span>
+            <p className="select-help">Pick a tonal colour ranging from dark and mellow to bright.</p>
+            <select
+              value={recommendationOptions.playerBrightness}
+              onChange={(event) =>
+                setRecommendationOptions((prev) => ({ ...prev, playerBrightness: event.target.value }))
+              }
+            >
+              {PLAYER_BRIGHTNESS.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </Card>
       <Card
         title="Bore and barrel"
         action={
@@ -287,10 +476,32 @@ export function GeometryPage() {
           </div>
         }
       >
+        <p>
+          These core dimensions define the clarinet body. They accept sensible defaults, so feel free
+          to experiment – you can always reload the preset above.
+        </p>
         <div className="grid-two">
-          <NumberField label="Bore" value={geometry.bore_mm} unit="mm" onChange={(value) => setGeometry((prev) => ({ ...prev, bore_mm: value }))} />
-          <NumberField label="Length" value={geometry.length_mm} unit="mm" onChange={(value) => setGeometry((prev) => ({ ...prev, length_mm: value }))} />
-          <NumberField label="Barrel" value={geometry.barrel_length_mm} unit="mm" onChange={(value) => setGeometry((prev) => ({ ...prev, barrel_length_mm: value }))} />
+          <NumberField
+            label="Bore"
+            value={geometry.bore_mm}
+            unit="mm"
+            description="Internal diameter of the main bore. Larger values generally darken the tone."
+            onChange={(value) => setGeometry((prev) => ({ ...prev, bore_mm: value }))}
+          />
+          <NumberField
+            label="Length"
+            value={geometry.length_mm}
+            unit="mm"
+            description="Overall tube length from mouthpiece to bell end."
+            onChange={(value) => setGeometry((prev) => ({ ...prev, length_mm: value }))}
+          />
+          <NumberField
+            label="Barrel"
+            value={geometry.barrel_length_mm}
+            unit="mm"
+            description="Length of the detachable barrel section at the top of the clarinet."
+            onChange={(value) => setGeometry((prev) => ({ ...prev, barrel_length_mm: value }))}
+          />
         </div>
         <Switch
           id="autosimulate-toggle"
@@ -308,6 +519,12 @@ export function GeometryPage() {
           </Button>
         }
       >
+        <p>
+          Enter measurements for each tone hole. The first three rows correspond to the upper-joint
+          chimneys (left hand) and the next three rows to the lower-joint chimneys (right hand).
+          Subsequent rows represent auxiliary vents such as the register and resonance keys. Use the
+          arrow buttons to reorder, clone or remove entries without retyping values.
+        </p>
         <Table columns={columns} data={geometry.tone_holes} />
         {issues.length > 0 && (
           <div className="validation-block" role="alert">
@@ -320,7 +537,30 @@ export function GeometryPage() {
           </div>
         )}
       </Card>
+      <Card title="Visualise the clarinet body">
+        <p>
+          These interactive visuals mirror the OpenWInD demo: the chart shows where each chimney
+          sits along the tube and how its diameter compares to the bore, while the preview sketches a
+          simplified clarinet body so you can spot spacing or height imbalances at a glance.
+        </p>
+        <div className="geometry-visual-grid">
+          <ChartToneHoles
+            toneHoles={geometry.tone_holes}
+            boreMm={geometry.bore_mm}
+            lengthMm={geometry.length_mm}
+          />
+          <ClarinetPreview
+            toneHoles={geometry.tone_holes}
+            lengthMm={geometry.length_mm}
+            boreMm={geometry.bore_mm}
+          />
+        </div>
+      </Card>
       <Card title="Constraints">
+        <p>
+          Constraints keep automatic tools within practical limits. If you want broader
+          experimentation, widen these values; for production-ready plans, tighten them.
+        </p>
         <div className="grid-two">
           <NumberField
             label="Minimum spacing"
@@ -328,6 +568,7 @@ export function GeometryPage() {
             unit="mm"
             min={2}
             step={0.5}
+            description="Enforces a safe minimum distance between tone holes."
             onChange={(value) => setConstraints({ minSpacingMm: value })}
           />
           <NumberField
@@ -336,6 +577,7 @@ export function GeometryPage() {
             unit="mm"
             min={2}
             step={0.1}
+            description="Prevents the recommender from suggesting unplayably small holes."
             onChange={(value) => setConstraints({ minDiameterMm: value })}
           />
           <NumberField
@@ -344,6 +586,7 @@ export function GeometryPage() {
             unit="mm"
             min={constraints.minDiameterMm}
             step={0.1}
+            description="Upper limit for hole size, keeping ergonomics comfortable."
             onChange={(value) => setConstraints({ maxDiameterMm: value })}
           />
           <NumberField
@@ -351,6 +594,7 @@ export function GeometryPage() {
             value={constraints.maxHoleCount}
             min={1}
             step={1}
+            description="Caps how many tone holes the automatic tools may create."
             onChange={(value) => setConstraints({ maxHoleCount: Math.round(value) })}
           />
         </div>
@@ -381,6 +625,50 @@ export function GeometryPage() {
               {geometrySummary.minSpacing === null
                 ? '—'
                 : `${geometrySummary.minSpacing.toFixed(1)}–${geometrySummary.maxSpacing.toFixed(1)} mm`}
+            </dd>
+          </div>
+          <div>
+            <dt>Undercut range</dt>
+            <dd>
+              {geometrySummary.minUndercut === null
+                ? '—'
+                : `${geometrySummary.minUndercut.toFixed(2)}–${geometrySummary.maxUndercut.toFixed(2)} mm`}
+            </dd>
+          </div>
+        </dl>
+      </Card>
+      <Card title="Chimney balance">
+        <p>
+          Maintain similar chimney heights across the three left-hand (upper-joint) and three
+          right-hand (lower-joint) chimneys to ensure even response through the chalumeau and throat
+          registers of a B♭ soprano clarinet.
+        </p>
+        <dl className="geometry-summary">
+          <div>
+            <dt>Upper joint</dt>
+            <dd>
+              {chimneySummary.topCount} chimneys ·{' '}
+              {chimneySummary.topAverage === null
+                ? '—'
+                : `${chimneySummary.topAverage.toFixed(1)} mm average`}
+            </dd>
+          </div>
+          <div>
+            <dt>Lower joint</dt>
+            <dd>
+              {chimneySummary.bottomCount} chimneys ·{' '}
+              {chimneySummary.bottomAverage === null
+                ? '—'
+                : `${chimneySummary.bottomAverage.toFixed(1)} mm average`}
+            </dd>
+          </div>
+          <div>
+            <dt>Auxiliary vents</dt>
+            <dd>
+              {chimneySummary.extraCount} vents ·{' '}
+              {chimneySummary.extraAverage === null
+                ? '—'
+                : `${chimneySummary.extraAverage.toFixed(1)} mm average`}
             </dd>
           </div>
         </dl>
