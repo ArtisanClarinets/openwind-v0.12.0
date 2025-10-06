@@ -20,7 +20,8 @@ export function sanitizeGeometry(geometry) {
       ...hole,
       axial_pos_mm: Math.max(hole.axial_pos_mm, 1),
       diameter_mm: Math.max(hole.diameter_mm, 2),
-      chimney_mm: Math.max(hole.chimney_mm, 2)
+      chimney_mm: Math.max(hole.chimney_mm, 2),
+      undercut_mm: hole.undercut_mm == null ? 0.8 : Math.max(hole.undercut_mm, 0)
     }))
   };
 }
