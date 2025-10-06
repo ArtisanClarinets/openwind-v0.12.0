@@ -30,6 +30,15 @@ const defaultSimulationOptions = {
 
 };
 
+const defaultRecommendationOptions = {
+  targetA4Hz: 440,
+  scale: 'equal',
+  includeRegister: 'standard',
+  playerProfile: 'balanced',
+  playerArticulation: 'standard',
+  playerBrightness: 'neutral'
+};
+
 const WorkspaceContext = createContext(null);
 
 export function WorkspaceProvider({ children }) {
@@ -51,6 +60,11 @@ export function WorkspaceProvider({ children }) {
   const [simulationResult, setSimulationResult] = useState(() => stored.simulation ?? null);
   const [optimizationResult, setOptimizationResult] = useState(() => stored.optimization ?? null);
   const [lastRecommendation, setLastRecommendation] = useState(() => stored.lastRecommendation ?? null);
+  const [recommendationOptions, setRecommendationOptionsState] = useState(() => ({
+    ...defaultRecommendationOptions,
+    ...(stored.recommendation ?? {}),
+    targetA4Hz: stored.recommendation?.targetA4Hz ?? stored.a4 ?? defaultRecommendationOptions.targetA4Hz
+  }));
 
   useEffect(() => {
     saveSettings({
@@ -61,7 +75,9 @@ export function WorkspaceProvider({ children }) {
       autosimulate,
       simulation: simulationResult,
       optimization: optimizationResult,
-      lastRecommendation
+      lastRecommendation,
+      recommendation: recommendationOptions,
+      a4: recommendationOptions.targetA4Hz
     });
   }, [
     geometry,
@@ -71,7 +87,8 @@ export function WorkspaceProvider({ children }) {
     autosimulate,
     simulationResult,
     optimizationResult,
-    lastRecommendation
+    lastRecommendation,
+    recommendationOptions
   ]);
 
   const setGeometry = useCallback((update) => {
@@ -105,6 +122,13 @@ export function WorkspaceProvider({ children }) {
     setAutosimulateState(Boolean(value));
   }, []);
 
+  const setRecommendationOptions = useCallback((update) => {
+    setRecommendationOptionsState((previous) => ({
+      ...previous,
+      ...(typeof update === 'function' ? update(previous) : update)
+    }));
+  }, []);
+
   const resetWorkspace = useCallback(() => {
     setGeometryState(sanitizeGeometry(defaultGeometry));
     setConstraintsState(defaultConstraints);
@@ -114,6 +138,7 @@ export function WorkspaceProvider({ children }) {
     setSimulationResult(null);
     setOptimizationResult(null);
     setLastRecommendation(null);
+    setRecommendationOptionsState(defaultRecommendationOptions);
   }, []);
 
   const value = useMemo(
@@ -134,6 +159,8 @@ export function WorkspaceProvider({ children }) {
       setOptimizationResult,
       lastRecommendation,
       setLastRecommendation,
+      recommendationOptions,
+      setRecommendationOptions,
       resetWorkspace
     }),
     [
@@ -147,6 +174,7 @@ export function WorkspaceProvider({ children }) {
       simulationResult,
       optimizationResult,
       lastRecommendation,
+      recommendationOptions,
       resetWorkspace
     ]
   );
