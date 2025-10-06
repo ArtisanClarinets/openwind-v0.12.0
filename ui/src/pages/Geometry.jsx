@@ -7,9 +7,15 @@ import { Switch } from '../components/Switch.jsx';
 import { useDebounce } from '../hooks/useDebounce.js';
 import { recommend, fetchPreset } from '../lib/apiClient.js';
 import { validateHoleSpacing } from '../lib/validators.js';
-import { loadSettings } from '../lib/storage.js';
 import { useToast } from '../components/Toast.jsx';
 import { useWorkspace } from '../lib/workspace.jsx';
+import {
+  PLAYER_ARTICULATIONS,
+  PLAYER_BRIGHTNESS,
+  PLAYER_PROFILES,
+  RECOMMENDATION_SCALES,
+  REGISTER_OPTIONS
+} from '../lib/constants.js';
 
 export function GeometryPage() {
   const {
@@ -19,7 +25,9 @@ export function GeometryPage() {
     setConstraints,
     autosimulate,
     setAutosimulate,
-    setLastRecommendation
+    setLastRecommendation,
+    recommendationOptions,
+    setRecommendationOptions
   } = useWorkspace();
   const [issues, setIssues] = useState([]);
   const debouncedGeometry = useDebounce(geometry, 320);
@@ -41,13 +49,16 @@ export function GeometryPage() {
     const holes = geometry.tone_holes ?? [];
     const diameters = holes.map((hole) => hole.diameter_mm);
     const spacing = holes.slice(1).map((hole, index) => hole.axial_pos_mm - holes[index].axial_pos_mm);
+    const undercuts = holes.map((hole) => hole.undercut_mm ?? 0);
     return {
       holeCount: holes.length,
       closed: holes.filter((hole) => hole.closed).length,
       minDiameter: diameters.length ? Math.min(...diameters) : null,
       maxDiameter: diameters.length ? Math.max(...diameters) : null,
       minSpacing: spacing.length ? Math.min(...spacing) : null,
-      maxSpacing: spacing.length ? Math.max(...spacing) : null
+      maxSpacing: spacing.length ? Math.max(...spacing) : null,
+      minUndercut: undercuts.length ? Math.min(...undercuts) : null,
+      maxUndercut: undercuts.length ? Math.max(...undercuts) : null
     };
   }, [geometry]);
 
@@ -118,32 +129,38 @@ export function GeometryPage() {
         return previous;
       }
       const lastHole = previous.tone_holes.at(-1);
-      const next = {
-        index: previous.tone_holes.length,
-        axial_pos_mm: lastHole ? lastHole.axial_pos_mm + constraints.minSpacingMm + 2 : 30,
-        diameter_mm: Math.max(8, constraints.minDiameterMm + 1),
-        chimney_mm: 12,
-        closed: false
-      };
-      return {
-        ...previous,
-        tone_holes: [...previous.tone_holes, next]
-      };
+        const next = {
+          index: previous.tone_holes.length,
+          axial_pos_mm: lastHole ? lastHole.axial_pos_mm + constraints.minSpacingMm + 2 : 30,
+          diameter_mm: Math.max(8, constraints.minDiameterMm + 1),
+          chimney_mm: 12,
+          undercut_mm: lastHole?.undercut_mm ?? 0.8,
+          closed: false
+        };
+        return {
+          ...previous,
+          tone_holes: [...previous.tone_holes, next]
+        };
     });
   }, [constraints.maxHoleCount, constraints.minSpacingMm, constraints.minDiameterMm, notify, setGeometry]);
 
   const handleRecommend = useCallback(async () => {
     try {
-      const globals = loadSettings();
       const response = await recommend({
-        target_a4_hz: globals.a4 ?? 440,
-        scale: 'equal',
+        target_a4_hz: recommendationOptions.targetA4Hz,
+        scale: recommendationOptions.scale,
         constraints: {
           min_spacing_mm: constraints.minSpacingMm,
           max_holes: constraints.maxHoleCount,
           min_diameter_mm: constraints.minDiameterMm,
           max_diameter_mm: constraints.maxDiameterMm
-        }
+        },
+        player_pref: {
+          profile: recommendationOptions.playerProfile,
+          articulation: recommendationOptions.playerArticulation,
+          brightness: recommendationOptions.playerBrightness
+        },
+        include_register: recommendationOptions.includeRegister
       });
       setGeometry(response.geometry);
       setLastRecommendation({
@@ -162,7 +179,8 @@ export function GeometryPage() {
     constraints.minSpacingMm,
     notify,
     setGeometry,
-    setLastRecommendation
+    setLastRecommendation,
+    recommendationOptions
   ]);
 
   const handlePreset = useCallback(async () => {
@@ -228,6 +246,11 @@ export function GeometryPage() {
         cell: (row) => renderNumericInput(row, 'chimney_mm', { min: 4, step: 0.5 })
       },
       {
+        header: 'Undercut (mm)',
+        accessor: 'undercut_mm',
+        cell: (row) => renderNumericInput(row, 'undercut_mm', { min: 0, step: 0.05 })
+      },
+      {
         header: 'State',
         accessor: 'closed',
         cell: (row) => (
@@ -276,6 +299,92 @@ export function GeometryPage() {
 
   return (
     <div className="page-grid geometry-grid">
+      <Card title="Recommendation options">
+        <div className="grid-two">
+          <NumberField
+            label="Target A4"
+            value={recommendationOptions.targetA4Hz}
+            unit="Hz"
+            step={0.1}
+            min={430}
+            max={450}
+            onChange={(value) => setRecommendationOptions((prev) => ({ ...prev, targetA4Hz: value }))}
+          />
+          <label className="ow-select">
+            <span>Pitch scale</span>
+            <select
+              value={recommendationOptions.scale}
+              onChange={(event) => setRecommendationOptions((prev) => ({ ...prev, scale: event.target.value }))}
+            >
+              {RECOMMENDATION_SCALES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="ow-select">
+            <span>Register focus</span>
+            <select
+              value={recommendationOptions.includeRegister}
+              onChange={(event) =>
+                setRecommendationOptions((prev) => ({ ...prev, includeRegister: event.target.value }))
+              }
+            >
+              {REGISTER_OPTIONS.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="ow-select">
+            <span>Player profile</span>
+            <select
+              value={recommendationOptions.playerProfile}
+              onChange={(event) =>
+                setRecommendationOptions((prev) => ({ ...prev, playerProfile: event.target.value }))
+              }
+            >
+              {PLAYER_PROFILES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="ow-select">
+            <span>Articulation</span>
+            <select
+              value={recommendationOptions.playerArticulation}
+              onChange={(event) =>
+                setRecommendationOptions((prev) => ({ ...prev, playerArticulation: event.target.value }))
+              }
+            >
+              {PLAYER_ARTICULATIONS.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="ow-select">
+            <span>Brightness</span>
+            <select
+              value={recommendationOptions.playerBrightness}
+              onChange={(event) =>
+                setRecommendationOptions((prev) => ({ ...prev, playerBrightness: event.target.value }))
+              }
+            >
+              {PLAYER_BRIGHTNESS.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </Card>
       <Card
         title="Bore and barrel"
         action={
@@ -381,6 +490,14 @@ export function GeometryPage() {
               {geometrySummary.minSpacing === null
                 ? '—'
                 : `${geometrySummary.minSpacing.toFixed(1)}–${geometrySummary.maxSpacing.toFixed(1)} mm`}
+            </dd>
+          </div>
+          <div>
+            <dt>Undercut range</dt>
+            <dd>
+              {geometrySummary.minUndercut === null
+                ? '—'
+                : `${geometrySummary.minUndercut.toFixed(2)}–${geometrySummary.maxUndercut.toFixed(2)} mm`}
             </dd>
           </div>
         </dl>

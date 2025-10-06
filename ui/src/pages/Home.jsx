@@ -49,14 +49,19 @@ export function Home() {
       .slice(1)
       .map((hole, index) => hole.axial_pos_mm - holes[index].axial_pos_mm)
       .filter((value) => Number.isFinite(value));
+    const undercuts = holes.map((hole) => hole.undercut_mm ?? 0).filter((value) => Number.isFinite(value));
     const minSpacing = spacing.length ? Math.min(...spacing) : null;
     const maxSpacing = spacing.length ? Math.max(...spacing) : null;
+    const minUndercut = undercuts.length ? Math.min(...undercuts) : null;
+    const maxUndercut = undercuts.length ? Math.max(...undercuts) : null;
     return {
       count: holes.length,
       closed,
       open: holes.length - closed,
       minSpacing,
-      maxSpacing
+      maxSpacing,
+      minUndercut,
+      maxUndercut
     };
   }, [geometry]);
 
@@ -113,6 +118,14 @@ export function Home() {
               {summary.minSpacing === null
                 ? '—'
                 : `${summary.minSpacing.toFixed(1)}–${summary.maxSpacing.toFixed(1)} mm`}
+            </dd>
+          </div>
+          <div>
+            <dt>Undercut range</dt>
+            <dd>
+              {summary.minUndercut === null
+                ? '—'
+                : `${summary.minUndercut.toFixed(2)}–${summary.maxUndercut.toFixed(2)} mm`}
             </dd>
           </div>
           <div>

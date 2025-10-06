@@ -4,7 +4,7 @@ import { Table } from '../components/Table.jsx';
 import { Button } from '../components/Button.jsx';
 import { ChartConvergence } from '../components/ChartConvergence.jsx';
 import { ChartSensitivity } from '../components/ChartSensitivity.jsx';
-import { exportGeometry, fetchOptimizationResult } from '../lib/apiClient.js';
+import { exportGeometry, fetchOptimizationResult, api } from '../lib/apiClient.js';
 import { useToast } from '../components/Toast.jsx';
 import { useWorkspace } from '../lib/workspace.jsx';
 
@@ -17,6 +17,7 @@ export function ResultsPage() {
     simulationResult
   } = useWorkspace();
   const [jobId, setJobId] = useState('');
+  const [lastExport, setLastExport] = useState(null);
   const { notify } = useToast();
 
   const holeColumns = useMemo(
@@ -24,7 +25,8 @@ export function ResultsPage() {
       { header: '#', accessor: 'index' },
       { header: 'Axial (mm)', accessor: 'axial_pos_mm', cell: (row) => row.axial_pos_mm?.toFixed?.(2) ?? row.axial_pos_mm },
       { header: 'Diameter (mm)', accessor: 'diameter_mm', cell: (row) => row.diameter_mm?.toFixed?.(2) ?? row.diameter_mm },
-      { header: 'Chimney (mm)', accessor: 'chimney_mm', cell: (row) => row.chimney_mm?.toFixed?.(2) ?? row.chimney_mm }
+      { header: 'Chimney (mm)', accessor: 'chimney_mm', cell: (row) => row.chimney_mm?.toFixed?.(2) ?? row.chimney_mm },
+      { header: 'Undercut (mm)', accessor: 'undercut_mm', cell: (row) => row.undercut_mm?.toFixed?.(2) ?? row.undercut_mm }
     ],
     []
   );
@@ -37,7 +39,10 @@ export function ResultsPage() {
       { header: 'Δ axial', accessor: 'delta_axial' },
       { header: 'Baseline dia', accessor: 'baseline_diameter' },
       { header: 'Optimized dia', accessor: 'optimized_diameter' },
-      { header: 'Δ dia', accessor: 'delta_diameter' }
+      { header: 'Δ dia', accessor: 'delta_diameter' },
+      { header: 'Baseline undercut', accessor: 'baseline_undercut' },
+      { header: 'Optimized undercut', accessor: 'optimized_undercut' },
+      { header: 'Δ undercut', accessor: 'delta_undercut' }
     ],
     []
   );
@@ -57,7 +62,13 @@ export function ResultsPage() {
         delta_axial: baseline && opt ? (opt.axial_pos_mm - baseline.axial_pos_mm).toFixed(2) : '—',
         baseline_diameter: baseline ? baseline.diameter_mm.toFixed(2) : '—',
         optimized_diameter: opt ? opt.diameter_mm.toFixed(2) : '—',
-        delta_diameter: baseline && opt ? (opt.diameter_mm - baseline.diameter_mm).toFixed(2) : '—'
+        delta_diameter: baseline && opt ? (opt.diameter_mm - baseline.diameter_mm).toFixed(2) : '—',
+        baseline_undercut: baseline?.undercut_mm != null ? baseline.undercut_mm.toFixed(2) : '—',
+        optimized_undercut: opt?.undercut_mm != null ? opt.undercut_mm.toFixed(2) : '—',
+        delta_undercut:
+          baseline?.undercut_mm != null && opt?.undercut_mm != null
+            ? (opt.undercut_mm - baseline.undercut_mm).toFixed(2)
+            : '—'
       });
     }
     return rows;
@@ -74,7 +85,15 @@ export function ResultsPage() {
   const runExport = async (fmt) => {
     try {
       const payload = await exportGeometry(fmt, { geometry, metadata: { fmt } });
-      notify(`Exported ${fmt.toUpperCase()} to ${payload.path}`, 'success');
+      const baseUrl = api.defaults.baseURL?.replace(/\/api\/v1$/, '') ?? '';
+      const suffix = payload.path.replace(/^.*exports\//, '');
+      const url = `${baseUrl}/exports/${suffix}`;
+      setLastExport({
+        format: fmt.toUpperCase(),
+        file: suffix,
+        url
+      });
+      notify(`Exported ${fmt.toUpperCase()} to ${suffix}`, 'success');
     } catch (error) {
       notify('Export failed', 'error');
     }
@@ -114,6 +133,14 @@ export function ResultsPage() {
             <Button onClick={() => runExport('dxf')}>DXF</Button>
             <Button onClick={() => runExport('step')}>STEP</Button>
           </div>
+          {lastExport && (
+            <p className="export-notice" aria-live="polite">
+              Latest export ({lastExport.format}):{' '}
+              <a href={lastExport.url} target="_blank" rel="noreferrer">
+                {lastExport.file}
+              </a>
+            </p>
+          )}
         </div>
       </Card>
       <Card

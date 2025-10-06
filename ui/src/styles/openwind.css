@@ -725,6 +725,21 @@ main {
   gap: 12px;
 }
 
+.export-notice {
+  font-size: 0.9rem;
+  color: rgba(226, 232, 240, 0.8);
+}
+
+.export-notice a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.export-notice a:hover,
+.export-notice a:focus-visible {
+  text-decoration: underline;
+}
+
 .log {
   list-style: none;
   padding: 0;

@@ -9,3 +9,9 @@ export const DEFAULT_NOTES = [
 
 export const TRANSPOSITIONS = ['Bb', 'A', 'C', 'F', 'Eb'];
 
+export const RECOMMENDATION_SCALES = ['equal', 'just'];
+export const PLAYER_PROFILES = ['balanced', 'bright', 'warm', 'dark'];
+export const PLAYER_ARTICULATIONS = ['standard', 'legato', 'staccato'];
+export const PLAYER_BRIGHTNESS = ['neutral', 'warm', 'bright'];
+export const REGISTER_OPTIONS = ['standard', 'chalumeau', 'clarion', 'altissimo'];
+
