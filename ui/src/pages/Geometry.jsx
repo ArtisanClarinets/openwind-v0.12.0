@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card } from '../components/Card.jsx';
 import { Button } from '../components/Button.jsx';
 import { NumberField } from '../components/NumberField.jsx';
