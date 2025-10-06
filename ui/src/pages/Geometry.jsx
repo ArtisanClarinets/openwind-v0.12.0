@@ -16,8 +16,6 @@ import {
   RECOMMENDATION_SCALES,
   REGISTER_OPTIONS
 } from '../lib/constants.js';
-import ChartToneHoles from '../components/ChartToneHoles.jsx';
-import { ClarinetPreview } from '../components/ClarinetPreview.jsx';
 
 export function GeometryPage() {
   const {
@@ -61,25 +59,6 @@ export function GeometryPage() {
       maxSpacing: spacing.length ? Math.max(...spacing) : null,
       minUndercut: undercuts.length ? Math.min(...undercuts) : null,
       maxUndercut: undercuts.length ? Math.max(...undercuts) : null
-    };
-  }, [geometry]);
-
-  const chimneySummary = useMemo(() => {
-    const holes = geometry.tone_holes ?? [];
-    const topJoint = holes.slice(0, 3);
-    const bottomJoint = holes.slice(3, 6);
-    const rest = holes.slice(6);
-    const average = (items, key) =>
-      items.length > 0
-        ? items.reduce((total, hole) => total + Number(hole[key] ?? 0), 0) / items.length
-        : null;
-    return {
-      topCount: topJoint.length,
-      bottomCount: bottomJoint.length,
-      extraCount: rest.length,
-      topAverage: average(topJoint, 'chimney_mm'),
-      bottomAverage: average(bottomJoint, 'chimney_mm'),
-      extraAverage: average(rest, 'chimney_mm')
     };
   }, [geometry]);
 
@@ -150,18 +129,18 @@ export function GeometryPage() {
         return previous;
       }
       const lastHole = previous.tone_holes.at(-1);
-      const next = {
-        index: previous.tone_holes.length,
-        axial_pos_mm: lastHole ? lastHole.axial_pos_mm + constraints.minSpacingMm + 2 : 30,
-        diameter_mm: Math.max(8, constraints.minDiameterMm + 1),
-        chimney_mm: 12,
-        undercut_mm: lastHole?.undercut_mm ?? 0.8,
-        closed: false
-      };
-      return {
-        ...previous,
-        tone_holes: [...previous.tone_holes, next]
-      };
+        const next = {
+          index: previous.tone_holes.length,
+          axial_pos_mm: lastHole ? lastHole.axial_pos_mm + constraints.minSpacingMm + 2 : 30,
+          diameter_mm: Math.max(8, constraints.minDiameterMm + 1),
+          chimney_mm: 12,
+          undercut_mm: lastHole?.undercut_mm ?? 0.8,
+          closed: false
+        };
+        return {
+          ...previous,
+          tone_holes: [...previous.tone_holes, next]
+        };
     });
   }, [constraints.maxHoleCount, constraints.minSpacingMm, constraints.minDiameterMm, notify, setGeometry]);
 
@@ -357,8 +336,7 @@ export function GeometryPage() {
           </li>
           <li>
             Edit tone holes directly in the table. Buttons on the right let you reorder, clone or
-            delete rows in one click. Remember that a B♭ soprano clarinet uses three upper-joint
-            chimneys for the left hand and three lower-joint chimneys for the right hand.
+            delete rows in one click.
           </li>
           <li>
             Adjust the constraints at the bottom if you want the automatic tools to explore a wider
@@ -520,10 +498,8 @@ export function GeometryPage() {
         }
       >
         <p>
-          Enter measurements for each tone hole. The first three rows correspond to the upper-joint
-          chimneys (left hand) and the next three rows to the lower-joint chimneys (right hand).
-          Subsequent rows represent auxiliary vents such as the register and resonance keys. Use the
-          arrow buttons to reorder, clone or remove entries without retyping values.
+          Enter measurements for each tone hole. Hover over the “State” chip to toggle between open
+          and closed fingerings. Use the arrow buttons to reorder the layout without retyping values.
         </p>
         <Table columns={columns} data={geometry.tone_holes} />
         {issues.length > 0 && (
@@ -633,42 +609,6 @@ export function GeometryPage() {
               {geometrySummary.minUndercut === null
                 ? '—'
                 : `${geometrySummary.minUndercut.toFixed(2)}–${geometrySummary.maxUndercut.toFixed(2)} mm`}
-            </dd>
-          </div>
-        </dl>
-      </Card>
-      <Card title="Chimney balance">
-        <p>
-          Maintain similar chimney heights across the three left-hand (upper-joint) and three
-          right-hand (lower-joint) chimneys to ensure even response through the chalumeau and throat
-          registers of a B♭ soprano clarinet.
-        </p>
-        <dl className="geometry-summary">
-          <div>
-            <dt>Upper joint</dt>
-            <dd>
-              {chimneySummary.topCount} chimneys ·{' '}
-              {chimneySummary.topAverage === null
-                ? '—'
-                : `${chimneySummary.topAverage.toFixed(1)} mm average`}
-            </dd>
-          </div>
-          <div>
-            <dt>Lower joint</dt>
-            <dd>
-              {chimneySummary.bottomCount} chimneys ·{' '}
-              {chimneySummary.bottomAverage === null
-                ? '—'
-                : `${chimneySummary.bottomAverage.toFixed(1)} mm average`}
-            </dd>
-          </div>
-          <div>
-            <dt>Auxiliary vents</dt>
-            <dd>
-              {chimneySummary.extraCount} vents ·{' '}
-              {chimneySummary.extraAverage === null
-                ? '—'
-                : `${chimneySummary.extraAverage.toFixed(1)} mm average`}
             </dd>
           </div>
         </dl>
