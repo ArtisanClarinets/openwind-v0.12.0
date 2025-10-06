@@ -40,7 +40,7 @@ function ToneHoleTooltip({ active, payload, label }) {
   );
 }
 
-function ChartToneHoles({ toneHoles = [], boreMm, lengthMm }) {
+export function ChartToneHoles({ toneHoles = [], boreMm, lengthMm }) {
   if (!toneHoles.length) {
     return <div className="chart-empty">Add tone holes to view their layout.</div>;
   }
@@ -135,6 +135,3 @@ function ChartToneHoles({ toneHoles = [], boreMm, lengthMm }) {
     </div>
   );
 }
-
-export { ChartToneHoles };
-export default ChartToneHoles;
