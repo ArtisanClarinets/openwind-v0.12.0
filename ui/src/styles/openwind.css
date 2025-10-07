@@ -93,6 +93,27 @@ main {
   padding: clamp(20px, 3vw, 32px);
 }
 
+.guidance-card {
+  border-left: 4px solid var(--accent);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(15, 23, 42, 0.6));
+}
+
+.guidance-card .ow-card-body {
+  gap: 12px;
+}
+
+.guidance-card ol,
+.guidance-card ul {
+  margin: 0;
+  padding-left: 1.4rem;
+  display: grid;
+  gap: 6px;
+}
+
+.guidance-card li {
+  line-height: 1.5;
+}
+
 .ow-card-header {
   display: flex;
   justify-content: space-between;
@@ -223,6 +244,12 @@ main {
 .ow-select span {
   font-weight: 600;
   color: var(--color-text-subtle);
+}
+
+.select-help {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.75);
 }
 
 .ow-select select {
@@ -491,6 +518,63 @@ main {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.geometry-visual-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items: start;
+}
+
+.chart-tooltip {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.35);
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  display: grid;
+  gap: 4px;
+}
+
+.clarinet-preview {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.clarinet-preview svg {
+  width: 100%;
+  height: auto;
+}
+
+.clarinet-preview.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(226, 232, 240, 0.7);
+  min-height: 160px;
+}
+
+.clarinet-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.8);
+}
+
+.clarinet-legend .legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-right: 8px;
+}
+
 .card-action-row {
   display: flex;
   flex-wrap: wrap;
@@ -723,6 +807,21 @@ main {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.export-notice {
+  font-size: 0.9rem;
+  color: rgba(226, 232, 240, 0.8);
+}
+
+.export-notice a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.export-notice a:hover,
+.export-notice a:focus-visible {
+  text-decoration: underline;
 }
 
 .log {
