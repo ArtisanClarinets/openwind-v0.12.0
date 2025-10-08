@@ -9,6 +9,8 @@ import { recommend, fetchPreset } from '../lib/apiClient.js';
 import { validateHoleSpacing } from '../lib/validators.js';
 import { useToast } from '../components/Toast.jsx';
 import { useWorkspace } from '../lib/workspace.jsx';
+import { ChartToneHoles } from '../components/ChartToneHoles.jsx';
+import { ClarinetPreview } from '../components/ClarinetPreview.jsx';
 import {
   PLAYER_ARTICULATIONS,
   PLAYER_BRIGHTNESS,
